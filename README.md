@@ -1,6 +1,6 @@
 ## Spin_molecular_dynamics_by_microwaves
 
-Moving spins of Fe(3+), Fe(2+) and O(2-) 
+Moving spins of Fe(3+), Fe(2+) and O(2-) in cubic cells
 
 dissipated spin molecular dynamics simulation 
 
