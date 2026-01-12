@@ -2,6 +2,8 @@
 
 Dissipated spin dynamics simulation 
 
+Metropolis criterion
+
 
 ## Numerical code, parameters and files
 
