@@ -2,11 +2,13 @@
 
 Moving spins of Fe(3+), Fe(2+) and O(2-) in cubic cells
 
+Microwaves of giga-Hertz frequency
+
 dissipated spin molecular dynamics simulation 
 
-Metropolis criterion - next step: accept/reject
+Metropolis criterion for the next step: accept/reject
 
-Microwaves of giga-Hertz frequency
+
 
 
 ## Numerical code, parameters and files
