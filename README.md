@@ -2,5 +2,5 @@
 
 @spin_nucCLD.f03
 param.h
-SAI.START1
+SAI106_config.START1
 
