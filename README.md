@@ -1,10 +1,12 @@
 ## Spin_molecular_dynamics_by_microwaves
 
-Spins of Fe(3+), Fe(2+) and O(2-) 
+Moving spins of Fe(3+), Fe(2+) and O(2-) 
 
 dissipated spin molecular dynamics simulation 
 
 Metropolis criterion - next step: accept/reject
+
+Microwaves of giga-Hertz frequency
 
 
 ## Numerical code, parameters and files
