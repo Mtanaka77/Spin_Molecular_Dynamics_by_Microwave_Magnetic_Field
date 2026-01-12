@@ -9,7 +9,7 @@ Selective heating mechanism of magnetic metal oxides by a microwave
 magnetic field, Phys. Rev. B, 79, 104420 (2009).
 
 
-## Simulation procedure
+## Simulation Procedure
 
 Moving spins of Fe(3+), Fe(2+) and O(2-) in cubic cells
 
@@ -24,7 +24,7 @@ dissipated spin molecular dynamics simulation
 
 
 
-## Numerical code, parameters and files
+## Numerical Code, Parameters and Files
 
 @spin_nucCLD7M6.f03: numerical code
 
