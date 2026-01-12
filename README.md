@@ -1,6 +1,8 @@
 ## Spin_molecular_dynamics_by_microwaves
 
-Dissipated spin dynamics simulation 
+Spins of Fe(3+), Fe(2+) and O(2-) 
+
+dissipated spin molecular dynamics simulation 
 
 Metropolis criterion - next step: accept/reject
 
