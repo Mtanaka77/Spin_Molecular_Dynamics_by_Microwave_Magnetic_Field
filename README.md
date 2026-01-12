@@ -15,9 +15,12 @@ Metropolis criterion for the next step: accept/reject
 
 @spin_nucCLD7M6.f03: numerical code
 
-param_spinRL6.h: parameters
-
+param_spinRL6.h: parameters  
+  number of nodes, total of irons and oxygens, p3m resolution
+  
 SAI106_config.START1: configuration
+  lattice size, number of cells, exchange integrals for Fe and O,
+  period of microwave B field, temperature, Curie temprature
 
 magnetite8.xyz: magnetite in a cubic lattice
 
