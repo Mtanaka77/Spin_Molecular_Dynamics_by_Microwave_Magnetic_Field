@@ -13,12 +13,13 @@ Metropolis criterion for the next step: accept/reject
 
 ## Numerical code, parameters and files
 
-@spin_nucCLD7M6.f03
+@spin_nucCLD7M6.f03: numerical code
 
-param_spinRL6.h
+param_spinRL6.h: parameters
 
-SAI106_config.START1
+SAI106_config.START1: configuration
 
-magnetite8.xyz
+magnetite8.xyz: magnetite in a cubic cell
+
 
 
