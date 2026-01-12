@@ -9,9 +9,9 @@ Microwaves of giga-Hertz frequency
 
 dissipated spin molecular dynamics simulation 
 
-  execution of 1,000,000 steps
+  > execution of 1,000,000 steps
 
-  Metropolis criterion for the next step: accept/reject
+  > Metropolis criterion for the next step: accept/reject
 
 
 
@@ -22,11 +22,11 @@ dissipated spin molecular dynamics simulation
 
 param_spinRL6.h: parameters 
 
-  number of nodes, total of irons and oxygens, p3m resolution
+ > number of nodes, total of irons and oxygens, p3m resolution
   
 SAI106_config.START1: configuration
 
-  lattice size, number of cells, exchange integrals for Fe and O,
+ > lattice size, number of cells, exchange integrals for Fe and O,
   period of microwave B field, temperature, Curie temprature
 
 magnetite8.xyz: magnetite in a cubic lattice
