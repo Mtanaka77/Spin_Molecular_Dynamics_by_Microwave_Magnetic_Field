@@ -27,7 +27,7 @@ param_spinRL6.h: parameters
 SAI106_config.START1: configuration
 
  > physical run time, lattice size, number of cells, exchange integrals for Fe and O,
-  period of microwave B field, temperature, Curie temprature
+  period of microwave magnetic field, temperature, Curie temprature
 
 magnetite8.xyz: magnetite in a cubic lattice
 
