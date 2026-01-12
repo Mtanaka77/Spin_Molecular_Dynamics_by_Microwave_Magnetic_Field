@@ -4,6 +4,9 @@ Sintering
 
 Theory identifying unpaired spins to increase above Curie temperture  
 
+Paper: Selective heating mechanism of magnetic metal oxides by a microwave 
+magnetic field, Phys. Rev. B, 79, 104420 (2009).
+
 
 ## Simulation procedure
 
