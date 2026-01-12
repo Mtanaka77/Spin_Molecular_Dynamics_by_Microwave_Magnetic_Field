@@ -1,6 +1,9 @@
 ## Spin_molecular_dynamics_by_microwaves
 
-## Code and parameters
+Dissipated spin dynamics simulation 
+
+
+## Numerical code, parameters and files
 
 @spin_nucCLD7M6.f03
 
