@@ -2,7 +2,7 @@
 
 Dissipated spin dynamics simulation 
 
-Metropolis criterion
+Metropolis criterion - next step: accept/reject
 
 
 ## Numerical code, parameters and files
