@@ -2,7 +2,7 @@
 
 ## Sintering Experiments and Theory
 
-Sintering by experiments (R. Roy et. al., Nature, 1999) Ref.1.  
+Sintering by experiments (R. Roy et. al., Nature, 1999), Ref.1.  
 
 Theory identifying unpaired 3d electron spins to increase above 
 Curie temperature (M. Tanaka et al., J. Chem. Phys, 2009), Ref.2.  
