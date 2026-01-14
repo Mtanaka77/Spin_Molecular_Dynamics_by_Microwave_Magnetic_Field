@@ -1,15 +1,12 @@
 # Praefix-String......................: SAI106
-# Maximum cpu time for this run.......:   360.000000000000000
+# Maximum cpu time for this run..420..:   300.000000000000000
 # Physical end time (ps)..............: 12001.000000000000000
 # Diskretisierungs-Schritt (ps).0001..:     0.001000000000000
-# Write out interval for IWRT1..10.0..:     5.000000000000000 
+# Write out interval for IWRT1..10.0..:     1.000000000000000 
 # Write out interval for IWRT2........:  1000.000000000000000 
-# Box size: xmax (Ang)................:     8.397000000
+# Box of fundamental domain xmax (Ang):     8.397000000
 # Box size: ymax (Ang)................:     8.397000000
 # Box size: zmax (Ang)................:     8.397000000
-# Number of domains in x (integer)....:     6
-# Number of domains in y (integer)....:     6
-# Number of domains in z (integer)....:     6
 # Maximum iteration counts (MC).......:  370001
 # Cutoff radius of interactions (Ang).:     3.700000000000000
 # Cutoff radius of ES interaction.....:     7.000000000000000 
@@ -25,3 +22,7 @@
 # Spin relaxation time (ps)...........:   1000.d0
 # Temperature (Kelvin)..700.d0........:    300.d0
 # Curie temperature (Kelvin)..........:    858.d0
+ 
+# Number of domains in x (integer)....:     6
+# Number of domains in y (integer)....:     6
+# Number of domains in z (integer)....:     6

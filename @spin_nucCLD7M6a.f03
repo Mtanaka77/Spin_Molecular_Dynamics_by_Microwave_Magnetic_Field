@@ -125,9 +125,9 @@
 !*  Format statement is DIFFERENT in Fortran 2003.               *
 !*****************************************************************
 !  Parallel Fortran 2003:                                        *
-!% mpif90 -mcmodel=medium -fpic -o a.out @spin_nucCLD7M6a.f03 -I/opt/fftw-3.3.10/include -L/opt/fftw-3.3.10/lib -lfftw3 &> log
+!% mpif90 -mcmodel=medium -fpic -o ax.out @spin_nucCLD7M6a.f03 -I/opt/fftw-3.3.10/include -L/opt/fftw-3.3.10/lib -lfftw3 &> log
 !                                                                *
-!% mpiexec -n 6 a.out &                                          *
+!% mpiexec -n 6 ax.out &                                         *
 !*****************************************************************
 !
       program spin7
@@ -137,10 +137,11 @@
       include    'param-spinRL6.h'
 !
       integer(C_INT) size,rank,key,ierror,kstart, &
-                     ir0,igrp,n_MCsteps,nt_p3m
+                     mx,my,mz,ir0,igrp,n_MCsteps,nt_p3m
       real(C_DOUBLE) cputime,wtime,wtime1,wtime2
       character*8    label,cdate*10,ctime*8
 !
+      common/parm4/  mx,my,mz
       common/parm5/  n_MCsteps,nt_p3m
       common/headr1/ label,cdate
       common/ranfff/ ir0  !<- ir0 rotate by ranff(x)
@@ -157,8 +158,11 @@
       suffix0= '1'  ! '1' 
 !
       label  = 'sp3_nucl'
-      nt_p3m = 5  ! in every 5 steps
+      nt_p3m =  5   ! in every 5 steps
 !  -------------------------------------------------
+      mx= meshx     !<-- param.h
+      my= meshy
+      mz= meshz
 !
       call mpi_init (ierror)
       call mpi_comm_rank (mpi_comm_world,rank,ierror)
@@ -333,8 +337,8 @@
                  n_of_j,np10,np100,ia,ja,ka,i1x,i2x,i1y,i2y,i1z,i2z, &
                  n_MCsteps,nt_p3m
 !
-      real(C_DOUBLE) t,dt,dts,dt0,dth,bex,bey,bez,spin2,spin3,  &
-                 Jaa,Jbb,Jab,J00,b00,bapx,bapy,bapz,bap,        &
+      real(C_DOUBLE) t8,dt,dts,dt0,dth,bex,bey,bez,spin2,spin3,  &
+                 Jaa,Jbb,Jab,J00,b00,Bapx,Bapy,Bapz,bap,        &
                  tau_b,tau_r,tau_diss,t_adv,fw,fw00,            &
                  Temp,Tcurie,g,mue_b,hbar,KJoule,kcal,mol,kT,eV,&
                  omg_b,rnd,                                     &
@@ -363,10 +367,10 @@
                     ifdt,kmax,if_vres(np0),ifv
       common/parm1/ it,is
       common/parm2/ dtwr,dtwr2
-      common/parm3/ t,pi,dt,tmax,cptot
+      common/parm3/ t8,pi,dt,tmax,cptot
       common/parm4/ mx,my,mz
       common/parm5/ n_MCsteps,nt_p3m
-      common/spins/ spin2,spin3,Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b, &
+      common/spins/ spin2,spin3,Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b, &
                     tau_diss,Temp,Tcurie
       common/imemo/ iwa,iwb
       common/ranfff/ ir0
@@ -424,7 +428,7 @@
 !*  Cold start: MC and MD
 !--------------------------
       if(kstart.eq.0) then
-        t= 0.d0
+        t8= 0.d0
 !
         it= 0
         is= 0   ! write out history
@@ -458,26 +462,33 @@
 !--------------------------
       else
         if(rank.eq.0) then
-        open (unit=11,file=praefixc//'.11'//suffix2, &
+          open (unit=11,file=praefixc//'.11'//suffix2, &
                     status='unknown',position='append',form='formatted')
 !
-        write(11,*) 'Read: ',praefixi//'.12'//suffix1
-        close (11)
+          write(11,*) '# Read: ',praefixi//'.12'//suffix1
+          close (11)
         end if
 !
+!% mpif90 -mcmodel=medium -fpic -o a.out @spin_nucCLD7M6b.f03 -I/opt/fftw-3.3.10/include -L/opt/fftw-3.3.10/lib -lfftw3 &> log
+!% mpiexec -n 6 a.out &                                          *
+!       call READ_CONF (xleng0,yleng0,zleng0,rank)
         open (unit=12,file=praefixi//'.12'//suffix1, & ! Only= 1
                                    status='old',form='unformatted')
 !
-!                  +++++ +++++ +++++ not xleng0
-        read(12) t,xleng,yleng,zleng,rcut,rcutC,Temp,Tcurie, &
+!                  +++++ +++++ +++++ mx*xleng0
+        read(12) t8,xleng,yleng,zleng,rcut,rcutC,Temp,Tcurie, &
                  tmax,dt,cptot
+!                aaaa aa aaaaa       aaaa aaaaa aaaa aaaaaa    
         read(12) x,y,z,vx,vy,vz,ch,mass,ag,ep
         read(12) x_0,y_0,z_0,rintC
         read(12) spx,spy,spz,sp2,spx00,spy00,spz00,r_ij
         read(12) aspx,aspy,aspz
-        read(12) Jint,u,spin2,spin3
-        read(12) Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b,toler,itermax
+        read(12) Jint,u,spin2,spin3,n_MCsteps,tau_diss
+!                                   ccccccccc cccccccc
+        read(12) Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b,toler,itermax
+!                aaa aaa aaa aaaa aaaa aaaa aaaaa aaaaa aaaaaaa
         read(12) dtwr,dtwr2,fw00,atsz,tsz0,av_tsz
+!                aaaa aaaaa 
         read(12) it,is,iwa,iwb,ir0
         read(12) np1,np2,spec,site,nintS,lintS,nintC,lintC,if_LJ
         read(12) i1,i2,i3,i4,disp_recv,cnt_recv,disp_recvC,cnt_recvC
@@ -485,24 +496,22 @@
                  usys,conv,aitr,psdt,tfix,uss,usb,tsx,tsy,tsz,sum_mb,&
                  u_Fe,u_O,fdt4,vdt4,idt4,timeh
         close(12)
-!
-!---------------------------
-!* Overwrite above values
-!---------------------------
-        call READ_CONF (xleng0,yleng0,zleng0,rank)
       end if
 !
+      xleng0= xleng/mx
+      yleng0= yleng/my
+      zleng0= zleng/mz
 !
       if(rank.eq.0) then
         open (unit=11,file=praefixc//'.11'//suffix2, &
                     status='unknown',position='append',form='formatted')
 !
-        if(kstart.eq.1) write(11,*) ' kstart=1: Spin dynamics .........'
+        if(kstart.eq.1) write(11,*) '# kstart=1: Spin dynamics ........'
 !
-        write(11,*) '>>input parameters...'
+        write(11,*) '>> Input parameters...'
         write(11,'(" domains: mx, my, mz=",3i3)') mx,my,mz
         write(11,'(" kstart=",i3,/)') kstart
-        write(11,933) bapx,bapy,bapz,Temp, &
+        write(11,933) Bapx,Bapy,Bapz,Temp, &
                       Jaa,Jbb,Jab,rcut,rcutC 
         write(11,'(" dt  =",1pd11.3,/," tolerance =",d11.3,/)') dt,toler
   933   format(' Applied H field(/100gauss) = ',3f8.1,/,&
@@ -571,7 +580,7 @@
       f1 = J00 *t_unit/hbar
       g1 = g*mue_b*b00 *t_unit/hbar
 !
-      bap= sqrt(bapx**2 +bapy**2 +bapz**2)
+      bap= sqrt(Bapx**2 +Bapy**2 +Bapz**2)
       b1= g*mue_b*b00 *bap  ! mue*b energy
 !
       tau_r= 0.d0
@@ -645,7 +654,7 @@
 ! ############################
 !
 !  >> p3m_init ...
-!* define parameters of /ewald1-3/
+!* Define parameters of /ewald1-3/
 !  -------------------------------
       pi = 4.d0*atan(1.d0)
 !     alpha  = 2*pi/zleng   ! 0.26d0
@@ -991,30 +1000,31 @@
         open (unit=13,file=praefixc//'.13'//suffix2,form='unformatted')
 !
         write(13) xleng,yleng,zleng,rcut,rcutC,dt
-        write(13) Jaa,Jbb,Jab,bapx,bapy,bapz,Jint
+        write(13) Jaa,Jbb,Jab,Bapx,Bapy,Bapz,Jint
         write(13) np1,np2,spec,site,nintS,lintS
         write(13) nintC,lintC,if_LJ
         close(13)
       end if
-!-------------------------------------------------------
-!-------------------------------------
-!* Time or minimization loop begins
-!-------------------------------------
+!------------------------------------------------------------------
+!******************************************************************
+!*  Time Loop or Minimization Loop begins                         *
+!******************************************************************
 !
       if(kstart.eq.1) del_en= 0
 !
-!                     !<<-- 1000: 250 lines below
+!                     !<<-- go to 1000: 250 lines below
  1000 continue
       dth= 0.5d0*dt
 !
       it= it + 1
-      t = t + dt
+      t8= t8 + dt
+!    ++++++++++++
 !
 !* All nodes must share the same info
 !  time synchronization is achieVed here...
 !
       call clocks (cputime,wtime)
-      if(t.gt.tmax) istop= 1
+      if(t8.gt.tmax) istop= 1
       if(wtime/60.d0.gt.cptot) istop= 1
 !
       call mpi_bcast (istop,1,mpi_integer,0,mpi_comm_world,ierror)
@@ -1025,8 +1035,8 @@
 !       dtwr2 = tau_b/4.d0
 !     end if
 !
-      iwrt1= iwrta(t,dtwr)
-      iwrt2= iwrtb(t,dtwr2)
+      iwrt1= iwrta(t8,dtwr)
+      iwrt2= iwrtb(t8,dtwr2)
       iter = 0
 !
       if(it.eq.1) then
@@ -1037,7 +1047,6 @@
         uav= 0
         wt1= 0
       end if
-!
 !
 !----------------------------------------------------------------
 !* MC step is executed by all nodes if kstart= 0
@@ -1053,7 +1062,7 @@
           kwrite   = 10000
         else                ! Initialize a large system with the organized seed cell
           np100= np1        ! all
-          nstep_MC = n_MCsteps  ! 1000001
+          nstep_MC = n_MCsteps  ! 1000001  <<-- xx
           kwrite   =   50000    !   50000
         end if
 !
@@ -1079,7 +1088,7 @@
         spz00(i)= spz(i)
         end do
 !                     !<<-- 2000: 24 lines below
-        go to 2000
+        go to 2000    !<<-- kstart= 0
       else
 !
         if(it.eq.1) then
@@ -1233,6 +1242,7 @@
 !
       if(MC_first) then
         MC_first= .false.
+!      ++++++++++++++++++
 !
         i= 0
         do 230 ia= i1x,i2x
@@ -1291,8 +1301,8 @@
       end if
 !
       kstart= 1
-      it= 0
-      t= 0
+      it= 0   !<<-- 
+      t8= 0
       go to 1000     !<-- 1000: 326 lines above
 !
 !-----------------------------------------------------------
@@ -1308,10 +1318,10 @@
 !-----------------------------------------------------------
  3000 continue
 !                                         ***
-      fw= fw00*(1.d0 -exp(-t/tau_b)) * sin(omg_b*t)  ! -m*b < 0
-      bex= bapx*fw
-      bey= bapy*fw
-      bez= bapz*fw
+      fw= fw00*(1.d0 -exp(-t8/tau_b)) * sin(omg_b*t8)  ! -m*b < 0
+      bex= Bapx*fw
+      bey= Bapy*fw
+      bez= Bapz*fw
 !
       iter= 0
   400 iter= iter +1
@@ -1430,7 +1440,7 @@
       end if
   390 continue
 !                                 <- Return to 116 lines above
-      if(notconv.ne.0 .and. iter.lt.itermax) go to 400
+      if(notconv.ne.0 .and. iter.lt.itermax) go to 400  !!<<-- 
 !     ------------------------------------------------
 !
 !* Decrease in spz(i) should be converted to s_perp(i), as sp2(i)= const.
@@ -1588,12 +1598,12 @@
           open (unit=11,file=praefixc//'.11'//suffix2, &
                     status='unknown',position='append',form='formatted')
 !
-           write(11,570) it,t,i,ifdt,dts,fdt8/vth,vdt8
+           write(11,570) it,t8,i,ifdt,dts,fdt8/vth,vdt8
            write(11,571) x(i),y(i),z(i),vx(i),vy(i),vz(i), &
                           dts*(fx(i)+fxC(i)+fkx(i))/(mass(i)*vth), &
                           dts*(fy(i)+fyC(i)+fky(i))/(mass(i)*vth), &
                           dts*(fz(i)+fzC(i)+fkz(i))/(mass(i)*vth)
-  570      format('it,t=',i8,f8.1,'  i,ifdt=',i4,i2, &
+  570      format('it,t8=',i8,f8.1,'  i,ifdt=',i4,i2, &
                   '   dts,fdt8/vth,vdt8=',1pd10.2,0p2f10.5)
   571      format(5x,'x:',1p3d11.3,3x,'vx:',3d11.3,/,5x,'fdt:',3d11.3)
 !
@@ -1648,7 +1658,9 @@
       u1= ub + um
 !
 !
-! ---- Diagnosis ----------------- On the major node --------------
+!******************************************************************
+! ---- Diagnosis ----------------- On the major node ------------ *
+!******************************************************************
 !
       if(rank.eq.0) then
 !
@@ -1691,7 +1703,7 @@
         vz4(i)= vz(i)
         end do
 !
-        write(13) t
+        write(13) t8
         write(13) (spx4(i),spy4(i),spz4(i),i=1,np1)
         write(13) (ch4(i),x4(i),y4(i),z4(i),i=1,np1+np2)
         write(13) (vx4(i),vy4(i),vz4(i),i=1,np1+np2)
@@ -1726,7 +1738,7 @@
         is= is +1
         if(is.gt.nhs) call rehist (rank)
 !
-        timeh(is)= t
+        timeh(is)= t8
         do 737 i= 1,np1
         if(spec(i).eq.2) then  ! Fe(2+)
           spinx(is)= spx(i)
@@ -1781,7 +1793,7 @@
         e_c_r = e_c_r/np1
         e_LJ  = e_LJ/np1
 !
-        t4 = t
+        t4 = t8
         bex4= b00*bex
         bez4= b00*bez
 !
@@ -1847,7 +1859,7 @@
         if(is.eq.1) then
           write(11,770)
   770     format(//,'# MD run is performed #',/, &
-            '      it   is       t  itr  usys      u_Fe      u_O     ',&
+            '      it   is      t8  itr  usys      u_Fe      u_O     ',&
             '  conv      f*dts/m_i    v*dt      e_sp     e_c_r    ',   &
             ' e_LJ     magz   deV_x(Fe)   deV_x(O)   cpu(min)')
           write(11,*)
@@ -1858,10 +1870,10 @@
         vdt4(is)= vdt8
         idt4(is)= ifdt
 ! 
-        write(11,771) it,is,t,iter,usys(is),u_Fe(is),u_O(is),conv(is), &
-                 fdt8,vdt8,e_sp,e_c_r,e_LJ,magz(is),ds_Fe(is),ds_O(is),&
+        write(11,771) t8,it,is,iter,usys(is),u_Fe(is),u_O(is),conv(is), &
+                 fdt8,vdt8,e_sp,e_c_r,e_LJ,magz(is),ds_Fe(is),ds_O(is), &
                  wtime/60.d0
-  771   format(i8,i5,f9.1,i4,1p6d10.2,3d10.2,0pf10.5,2f10.3,f8.2)
+  771   format(f9.1,i8,i5,i4,1p6d10.2,3d10.2,0pf10.5,2f10.3,f8.2)
 !
 !                                        ! ic= 0: reset wx-wn
         call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,np1,0)
@@ -1873,7 +1885,7 @@
       if(iwrt2.eq.0) then
         open (unit=77,file=praefixc//'.77'//suffix2, &
                     status='unknown',position='append',form='formatted')
-        time= t  !<- real*4
+        time= t8  !<- real*4
 !
         call plot_spin (x,y,z,spx,spy,spz,spec,site,np1)
         call distr_spin (spx,spy,spz,spec,site,np1)
@@ -1886,14 +1898,14 @@
         open (unit=12,file=praefixc//'.12'//suffix2, & ! usual= 2
                                   status='unknown',form='unformatted')
 !
-        write(12) t,xleng,yleng,zleng,rcut,rcutC,Temp,Tcurie, &
+        write(12) t8,xleng,yleng,zleng,rcut,rcutC,Temp,Tcurie, &
                   tmax,dt,cptot
         write(12) x,y,z,vx,vy,vz,ch,mass,ag,ep
         write(12) x_0,y_0,z_0,rintC
         write(12) spx,spy,spz,sp2,spx00,spy00,spz00,r_ij
         write(12) aspx,aspy,aspz
-        write(12) Jint,u,spin2,spin3
-        write(12) Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b,toler,itermax
+        write(12) Jint,u,spin2,spin3,n_MCsteps,tau_diss
+        write(12) Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b,toler,itermax
         write(12) dtwr,dtwr2,fw00,atsz,tsz0,av_tsz
         write(12) it,is,iwa,iwb,ir0
         write(12) np1,np2,spec,site,nintS,lintS,nintC,lintC,if_LJ
@@ -1906,11 +1918,14 @@
 !
       close (11)
       end if
-! --------------------------------------- On major nodes --------------
+!
+!******************************************************************
+! ---- Diagnosis Ended ------------- On the major node ---------- *
+!******************************************************************
 !
         if(istop.eq.1) go to 7000
       go to 1000
-! ************* End of the loop ***************************************
+! ************* End of the Loop ***********************************
 !
  7000 continue
 !
@@ -1918,34 +1933,17 @@
         open (unit=12,file=praefixc//'.12'//suffix2, & ! usual= 2
                               status='unknown',form='unformatted')
 !
-        write(12) t,xleng,yleng,zleng,rcut,rcutC,Temp,Tcurie, &
-                  tmax,dt,cptot
-        write(12) x,y,z,vx,vy,vz,ch,mass,ag,ep
-        write(12) x_0,y_0,z_0,rintC
-        write(12) spx,spy,spz,sp2,spx00,spy00,spz00,r_ij
-        write(12) aspx,aspy,aspz
-        write(12) Jint,u,spin2,spin3
-        write(12) Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b,toler,itermax
-        write(12) dtwr,dtwr2,fw00,atsz,tsz0,av_tsz
-        write(12) it,is,iwa,iwb,ir0
-        write(12) np1,np2,spec,site,nintS,lintS,nintC,lintC,if_LJ
-        write(12) i1,i2,i3,i4,disp_recv,cnt_recv,disp_recvC,cnt_recvC
-        write(12) spinx,spinz,spin7,bextx,bextz,magx,magy,magz, &
-                  usys,conv,aitr,psdt,tfix,uss,usb,tsx,tsy,tsz,sum_mb, &
-                  u_Fe,u_O,fdt4,vdt4,idt4,timeh
-        close(12)
-!
 !
         call date_and_time7 (cdate,ctime)
 !
         open (unit=11,file=praefixc//'.11'//suffix2, &
                     status='unknown',position='append',form='formatted')
 !
-        write(11,*) ' Job is finished  t, cptot=',t,cptot
+        write(11,*) ' Job is finished  t8, cptot=',t8,cptot
         write(11,*) ' today = ',cdate
         write(11,*) ' time  = ',ctime
 
-        write(11,*) ' Final: t, tmax=',t,tmax
+        write(11,*) ' Final: t8, tmax=',t8,tmax
         close (11)
 !
         open (unit=77,file=praefixc//'.77'//suffix2, &
@@ -2156,9 +2154,9 @@
       real(C_DOUBLE) xo(100),yo(100),zo(100),cho(100)
       real(C_DOUBLE) x(np0),y(np0),z(np0),ch(np0),spx(np0),spy(np0),&
                  spz(np0),sp2(np0),spin2,spin3,Jaa,Jbb,Jab,     &
-                 bapx,bapy,bapz,tau_b,tau_diss,Temp,Tcurie,     &
+                 Bapx,Bapy,Bapz,tau_b,tau_diss,Temp,Tcurie,     &
                  xleng,yleng,zleng,pi,pi2,th,ph,xx,yy,zz,       &
-                 t,dt,tmax,cptot,xleng0,yleng0,zleng0,          &
+                 t8,dt,tmax,cptot,xleng0,yleng0,zleng0,          &
                  a(3),b(3),c(3),qFe2,qFe3,qo
       real(C_DOUBLE) eps,ranff
       integer(C_INT) spec(np0),site(np0),np1,np2,rank,size,np10,np20,  &
@@ -2166,9 +2164,9 @@
                  nFe2,nFe3,ierror,i1x,i2x,i1y,i2y,i1z,i2z
       character  char*2,text1*173  !text1*125
 !
-      common/spins/ spin2,spin3,Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b, &
+      common/spins/ spin2,spin3,Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b, &
                     tau_diss,Temp,Tcurie
-      common/parm3/ t,pi,dt,tmax,cptot
+      common/parm3/ t8,pi,dt,tmax,cptot
       common/ewald3/ xleng,yleng,zleng
       common/parm4/ mx,my,mz
 !
@@ -2430,7 +2428,7 @@
       np1= l
 ! --------------
 !
-! oxygen
+! Oxygen
 !
       j= 0
 !
@@ -2468,7 +2466,6 @@
       np2= j
 ! --------------
 !
-!
 !******************************************************
 !*  File I/O is allowed only by the master node       *
 !******************************************************
@@ -2480,7 +2477,6 @@
         write(11,707) size,np1,np2
   707   format(' /init/: Num of procs=',i3,'  np(Fe),np(O)=',2i6,/)
         close (11)
-!
 !       close (17)
 ! +++++
         open (unit=18,file='mag3.xyz',form='formatted')
@@ -2913,7 +2909,11 @@
                      dnz(0:meshz)
 !                                       ******  defined here.
       if(rank.eq.0) then
+        open (unit=11,file=praefixc//'.11'//suffix2, &
+                    status='unknown',position='append',form='formatted')
+!
         write(11,*) ' - Calculating calculate_differential_operator'
+        close (11)
       end if
 !
       dmeshx= dfloat(meshx)
@@ -2966,11 +2966,15 @@
                   nominatorx,nominatory,nominatorz,denominator
 !
       if(rank.eq.0) then
+        open (unit=11,file=praefixc//'.11'//suffix2, &
+                    status='unknown',position='append',form='formatted')
+!
         write(11,*) ' - Calculating influence function with parameters'
         write(11,601) meshx,meshy,meshz,pp,alpha,xleng,yleng,zleng
   601   format('   meshx, meshy, meshz=',3i5,/,  &
                '   p=',i5,/,'   alpha=',d20.12,/,&
                ',  xleng, yleng, zleng=',3d20.12,/)
+        close (11)
       end if
 ! 
 !     fak1= 2.d0*dfloat(mesh*mesh*mesh)/leng**2
@@ -3035,9 +3039,13 @@
       dinterpol= dfloat(mintpol)
 !
       if(rank.eq.0) then
+        open (unit=11,file=praefixc//'.11'//suffix2, &
+                    status='unknown',position='append',form='formatted')
+!
         write(11,601) PP
   601   format(/,' - interpolating the order-',i1,' charge assignment', &
                ' function')
+        close (11)
       end if
 !
       do i= -mintpol, mintpol
@@ -3068,7 +3076,11 @@
 !-----------
 ! 
       if(rank.eq.0) then
+        open (unit=11,file=praefixc//'.11'//suffix2, &
+                    status='unknown',position='append',form='formatted')
+!
         write(11,*) ' - Calculating mesh-shift'
+        close (11)
       end if
 !  
       dmeshx= dfloat(meshx)
@@ -3195,7 +3207,7 @@
       include     'param-spinRL6.h'
 !
       integer(C_INT) rank,mx,my,mz,itermax,n_MCsteps,nt_P3M
-      real(C_DOUBLE) xleng0,yleng0,zleng0,t,pi,dt,tmax,cptot,  &
+      real(C_DOUBLE) xleng0,yleng0,zleng0,t8,pi,dt,tmax,cptot, &
                      spin2,spin3,Jaa,Jbb,Jab,Bapx,Bapy,Bapz,   &
                      tau_b,tau_diss,Temp,TCurie,toler,         &
                      dtwr,dtwr2
@@ -3205,7 +3217,7 @@
       common/atoms/  rad_Fe,rad_O,elj_Fe,elj_O,rcut,rcutC
 !
       common/parm2/ dtwr,dtwr2
-      common/parm3/ t,pi,dt,tmax,cptot
+      common/parm3/ t8,pi,dt,tmax,cptot
       common/parm4/ mx,my,mz
       common/parm5/ n_MCsteps,nt_P3M
       common/spins/ spin2,spin3,Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b, &
@@ -3422,12 +3434,12 @@
 !
       real(C_DOUBLE) x(np0),y(np0),z(np0),spx(np0),spy(np0),spz(np0)
       integer(C_INT) spec(np0),site(np0)
-      real(C_DOUBLE) t,xleng,yleng,zleng,pi,dt,tmax,cptot, &
-                 spin2,spin3,Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b,tau_diss,&
+      real(C_DOUBLE) t8,xleng,yleng,zleng,pi,dt,tmax,cptot, &
+                 spin2,spin3,Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b,tau_diss,&
                  Temp,Tcurie
-      common/parm3/ t,pi,dt,tmax,cptot
+      common/parm3/ t8,pi,dt,tmax,cptot
       common/ewald3/ xleng,yleng,zleng
-      common/spins/ spin2,spin3,Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b, &
+      common/spins/ spin2,spin3,Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b, &
                     tau_diss,Temp,Tcurie
 !
       character*8    label,cdate*10,ctime*8,cax*1
@@ -3464,7 +3476,7 @@
       call values (9.0,14.4,hh,qab4,0.,101)
 !
       Temp4= Temp
-      bext4= sqrt(bapx**2 +bapy**2 +bapz**2)
+      bext4= sqrt(Bapx**2 +Bapy**2 +Bapz**2)
       call symbol (13.0,16.0,hh,'Temp=', 0.,5)
       call values (15.0,16.0,hh,Temp4,0.,101)
       call symbol (13.0,15.2,hh,'Bapp=', 0.,5)
@@ -3743,7 +3755,7 @@
       real(C_float) spinx,spinz,spin7,bextx,bextz,magx,magy,magz, &
                     usys,conv,aitr,psdt,tfix,uss,usb,tsx,tsy,tsz, &
                     sum_mb,u_Fe,u_O,ds_Fe,ds_O,fdt4,vdt4,idt4,timeh,&
-                    cosd,sind,chi_real,chi_imag,b00,bmw, &
+                    cosd,sind,chi_real,chi_imag,b00,Bmw, &
                     mue_b,hh,av_mz(nhs),amz,ss,s2,       &
                     emax,emin,emax1,emax2,emax3,emin1,emin2,emin3
       common/ehist/ spinx(nhs),spinz(nhs),spin7(nhs), &
@@ -3753,12 +3765,12 @@
                     sum_mb(nhs),u_Fe(nhs),u_O(nhs),ds_Fe(nhs),ds_O(nhs),&
                     fdt4(nhs),vdt4(nhs),idt4(nhs),timeh(nhs)
 !
-      real(C_DOUBLE) spin2,spin3,Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b, &
+      real(C_DOUBLE) spin2,spin3,Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b, &
                     tau_diss,Temp,Tcurie
-      common/spins/ spin2,spin3,Jaa,Jbb,Jab,bapx,bapy,bapz,tau_b, &
+      common/spins/ spin2,spin3,Jaa,Jbb,Jab,Bapx,Bapy,Bapz,tau_b, &
                     tau_diss,Temp,Tcurie
-      real(C_DOUBLE) t,xleng,yleng,zleng,pi,dt,tmax,cptot
-      common/parm3/ t,pi,dt,tmax,cptot
+      real(C_DOUBLE) t8,xleng,yleng,zleng,pi,dt,tmax,cptot
+      common/parm3/ t8,pi,dt,tmax,cptot
       common/ewald3/ xleng,yleng,zleng
 !
       character*8    label,cdate*10,ctime*8
@@ -3807,13 +3819,13 @@
 !
       mue_b= 9.27410e-21   ! e*hbar/2mc
       b00= 100             ! gauss
-      bmw= b00*sqrt(bapx**2 +bapy**2 +bapz**2)
+      Bmw= b00*sqrt(Bapx**2 +Bapy**2 +Bapz**2)
 !
       amz= sqrt(2*s2/ns)
 !
-      if(bmw.gt.1.d-5) then
-        chi_real= mue_b*amz/bmw
-        chi_imag= 2*(mue_b*b00*ss/ns)/bmw**2
+      if(Bmw.gt.1.d-5) then
+        chi_real= mue_b*amz/Bmw
+        chi_imag= 2*(mue_b*b00*ss/ns)/Bmw**2
 !
         write(11,731) is,amz,chi_real,chi_imag
   731   format('Magnetic susceptibility...', &
@@ -3821,7 +3833,7 @@
                '   chi_r, chi_i=',1p2d11.3,/)
       else
         write(11,*) 'Magnetic susceptibility is not'
-        write(11,*) '  calculated as bmw = 0 ......'
+        write(11,*) '  calculated as Bmw = 0 ......'
       end if
 !
 !
@@ -3943,8 +3955,8 @@
       real(C_DOUBLE) dtwr,dtwr2
       common/parm2/  dtwr,dtwr2
 !
-      real(C_DOUBLE) t,xleng,yleng,zleng,pi,dt,tmax,cptot
-      common/parm3/ t,pi,dt,tmax,cptot
+      real(C_DOUBLE) t8,xleng,yleng,zleng,pi,dt,tmax,cptot
+      common/parm3/ t8,pi,dt,tmax,cptot
       common/ewald3/ xleng,yleng,zleng
 !     character     suffix2*2
 !
@@ -4232,14 +4244,15 @@
 !
 !
 !------------------------------------------------
-      function iwrta (t,dtwr)
+      function iwrta (t8,dtwr)
 !------------------------------------------------
       use, intrinsic :: iso_c_binding
+!
       integer(C_INT) iwrta,iw
-      real*8  t,dtwr
+      real*8  t8,dtwr
       common/imemo/ iwa,iwb
 !
-      iw= t/dtwr
+      iw= t8/dtwr
       if(iw.gt.iwa) then
         iwa= iw
         iwrta= 0
@@ -4252,14 +4265,15 @@
 !
 !
 !------------------------------------------------
-      function iwrtb (t,dtwr)
+      function iwrtb (t8,dtwr)
 !------------------------------------------------
       use, intrinsic :: iso_c_binding
+!
       integer(C_INT) iwrtb,iw
-      real*8  t,dtwr
+      real*8  t8,dtwr
       common/imemo/ iwa,iwb
 !
-      iw= t/dtwr 
+      iw= t8/dtwr 
       if(iw.gt.iwb) then
         iwb= iw
         iwrtb= 0
@@ -4363,7 +4377,7 @@
     6 qr(j)= ql(j) +ycm(j)
 !
 !                 ******************************************************
-!*                **  make a copy before the top-left frame is drawn. **
+!*                **  Make a copy before the top-left frame is drawn. **
 !                 ******************************************************
       hh= 0.70
       i1= iabs(ix)
@@ -4409,7 +4423,7 @@
    40    continue
       end if
 !                                **************************************
-!                                ** set a new scale and draw a frame.**
+!                                ** Set a new scale and draw a frame.**
 !                                **************************************
       if(iplot.eq.2) then
          ymax= -1.e10
@@ -4450,7 +4464,7 @@
       ymax1(isc)= ymax
       ymin1(isc)= ymin
 !                                                      *************
-!                                                      **  frame. **
+!                                                      **  Frame. **
 !                                                      *************
       call plot (pl(i1),ql(j1),3)
       call plot (pl(i1),qr(j1),2)
@@ -4458,7 +4472,7 @@
       call plot (pr(i1),ql(j1),2)
       call plot (pl(i1),ql(j1),2)
 !                                                    ******************
-!                                                    **  tick marks. **
+!                                                    **  Tick marks. **
 !                                                    ******************
       scx= xcm(i1)/(nxtick+1)
       scy= ycm(j1)/(nytick+1)
@@ -4491,7 +4505,7 @@
       call plot (x4,y0,2)
    63 continue
 !                                                     **************
-!                                                     ** numbers. **
+!                                                     ** Numbers. **
 !                                                     **************
 !
       hhs= 0.6
@@ -4502,7 +4516,7 @@
       call number (pl(i1)-1.8,qr(j1)-0.30,hhs,ymax,0.,101)
 !
 !                                                     **************
-!                                                     **  labels. **
+!                                                     **  Labels. **
 !                                                     **************
       xc= 0.5*(pl(i1)+pr(i1))
       xu= xc -1.60
@@ -4518,7 +4532,7 @@
       yc= 0.5*(ql(j1)+qr(j1))
       call symbol (xl,yc,hh,lab3,0.,n3)
 !                                     **********************************
-!                                     **  no plot is made if npt1 < 0 **
+!                                     **  No plot is made if npt1 < 0 **
 !                                     **********************************
    70 if(npt1.lt.0) return
 !
@@ -4611,7 +4625,7 @@
       ymax= ymax8
       zmax= zmax8
 !
-!* 1. plot at k= k0: subscript j first.
+!* 1. Plot at k= k0: subscript j first.
 !
       npx= 0
       ij= 0
@@ -4634,7 +4648,7 @@
                 +   q(il,jr,k0) +2.*q(il,j,k0)    +q(il,jl,k0) )
    10 continue
 !
-!* 2. plot at j= j0: subscript k first.
+!* 2. Plot at j= j0: subscript k first.
 !
       npx= 0
       ij= 0
@@ -4685,7 +4699,7 @@
       zc=  0.5*(zr+zl)
 !
 !---------------------------------------------
-!*  **maximum of the vectors**
+!*  **Maximum of the vectors**
 !---------------------------------------------
 !
       am2= 0.
@@ -4706,7 +4720,7 @@
       call values (999.0,999.0,hh,ams,0.,101)
 !
 !---------------------------------------------
-!*  (1): contours in (x,z) plane.
+!*  (1): Contours in (x,z) plane.
 !---------------------------------------------
 !
       call setscl (0.,0.,zmax,xmax,zl,xl2,zr,xr2,gdz,gdx, &
@@ -4725,7 +4739,7 @@
                    ncontr,1)
 !
 !---------------------------------------------
-!*  (2): contours in (x,y) plane.
+!*  (2): Contours in (x,y) plane.
 !---------------------------------------------
 !
       call setscl (0.,0.,ymax,xmax,yl,xl2,yr,xr2,gdy,gdx, &
@@ -4744,7 +4758,7 @@
                    ncontr,1)
 !
 !---------------------------------------------
-!*  (3): cut plots.
+!*  (3): Cut plots.
 !---------------------------------------------
 !
       do 300 jj= 1,4
