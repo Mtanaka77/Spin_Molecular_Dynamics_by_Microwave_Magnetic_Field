@@ -2,11 +2,10 @@
 
 ## Sintering Experiments and Theory
 
-Sintering by experiments, Prof. R. Roy et. al., Nature, 399, 688 (1999).  
+Sintering by experiments, Prof. R. Roy et. al., Nature (1999).  
 
-Theory identifying unpaired 3d electron spins to increase above Curie temperture,  
-Selective heating mechanism of magnetic metal oxides by a microwave 
-magnetic field, Phys. Rev. B, 79, 104420 (2009).
+Theory identifying unpaired 3d electron spins to increase above 
+Curie temperture (J. Chem. Phys, 2009).  
 
 
 ## Simulation Procedure
@@ -40,5 +39,11 @@ SAI106_config.START1: configuration
 
 magnetite8.xyz: magnetite in a cubic lattice
 
+References
 
+1. R. Roy, D. Agrawal, J. Cheng, and S. Gedevanishvili,
+Nature, 399, 668 (1999).
+
+3. M. Tanaka, H. Kono, and K. Maruyama, Selective heating mechanism of magnetic
+metal oxides by a microwave magnetic field, Phys. Rev. B, 79, 104420 (2009).
 
