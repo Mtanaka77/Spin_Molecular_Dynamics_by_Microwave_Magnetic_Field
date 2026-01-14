@@ -11,13 +11,13 @@ magnetic field, Phys. Rev. B, 79, 104420 (2009).
 
 ## Simulation Procedure
 
-Moving spins of Fe(3+), Fe(2+) and O(2-) in cubic cells
+Electron spins moving of Fe(3+), Fe(2+) and O(2-) in cubic cells
 
 Microwaves of giga-Hertz frequency
 
 Dissipated spin molecular dynamics simulation 
 
-  > execution of 1,000,000 steps
+  > execution of 1,000,000 steps of $ Delta t= 0.001 $ ps
 
   > Metropolis criterion for the next step: accept/reject
 
