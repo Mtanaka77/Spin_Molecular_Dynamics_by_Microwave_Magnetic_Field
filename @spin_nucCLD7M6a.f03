@@ -160,9 +160,10 @@
       label  = 'sp3_nucl'
       nt_p3m =  5   ! in every 5 steps
 !  -------------------------------------------------
-      mx= meshx     !<-- param.h
+      mx= meshx     !<<- param.h
       my= meshy
       mz= meshz
+!  -------------------------------------------------
 !
       call mpi_init (ierror)
       call mpi_comm_rank (mpi_comm_world,rank,ierror)
@@ -394,8 +395,8 @@
                     uss(nhs),usb(nhs),tsx(nhs,3),tsy(nhs,3),tsz(nhs,3), &
                     sum_mb(nhs),u_Fe(nhs),u_O(nhs),ds_Fe(nhs),ds_O(nhs),&
                     fdt4(nhs),vdt4(nhs),idt4(nhs),timeh(nhs)
-      logical       MC_first
-      data          MC_first/.true./
+      logical       MC_first,ft06_start
+      data          MC_first/.true./,ft06_start/.true./
 !
       real(C_DOUBLE) alpha,xleng,yleng,zleng
       integer(C_INT) PP
@@ -564,7 +565,6 @@
 !
         close (11)
       end if
-
 !
 !* Exchange: J= kT_c/0.3z   cf. Kittel eq.(15-7)
 !
@@ -600,12 +600,12 @@
 !
         dtrhs= f1*Jab*sp2(1)**2*dt
         if(abs(dtrhs).gt.0.4d0) then
-          write(11,*) ' ## dt*rhs > 0.4d0 ..... stop'
+          write(06,*) ' ## dt*rhs > 0.4d0 ..... stop'
           return
         end if
 !
         write(11,103) dtrhs,tau_r,tau_b,tau_diss
-  103   format(' Increment of RHS for dt (negative Jab)=',f10.4, &
+  103   format(' >> Increment of RHS for dt (negative Jab)=',f10.4, &
                /,'   tau_res = ',f10.2,  &
                /,'   tau_mw  = ',f10.2,  &
                /,'   tau_diss= ',f10.2,/)
@@ -1856,10 +1856,13 @@
         psdt(is)= dtrhs
         sum_mb(is)= del_en
 !
-        if(is.eq.1) then
+!       if(is.eq.1) then
+        if(ft06_start) then
+          ft06_start= .false.
+!
           write(11,770)
   770     format(//,'# MD run is performed #',/, &
-            '      it   is      t8  itr  usys      u_Fe      u_O     ',&
+            '      t8   it   is     itr  usys      u_Fe      u_O     ',&
             '  conv      f*dts/m_i    v*dt      e_sp     e_c_r    ',   &
             ' e_LJ     magz   deV_x(Fe)   deV_x(O)   cpu(min)')
           write(11,*)
@@ -1873,7 +1876,7 @@
         write(11,771) t8,it,is,iter,usys(is),u_Fe(is),u_O(is),conv(is), &
                  fdt8,vdt8,e_sp,e_c_r,e_LJ,magz(is),ds_Fe(is),ds_O(is), &
                  wtime/60.d0
-  771   format(f9.1,i8,i5,i4,1p6d10.2,3d10.2,0pf10.5,2f10.3,f8.2)
+  771   format('t=',f7.1,i8,i5,i4,1p6d10.2,3d10.2,0pf10.5,2f10.3,f8.2)
 !
 !                                        ! ic= 0: reset wx-wn
         call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,np1,0)
@@ -3264,9 +3267,9 @@
         close (11)
       end if 
 !        
-      read (08,'(a40,i10)')   text1,mx      ! Number of domains, mx=7
-      read (08,'(a40,i10)')   text1,my      !       my=7
-      read (08,'(a40,i10)')   text1,mz      !       mz=7
+!     read (08,'(a40,i10)')   text1,mx      ! Number of domains
+!     read (08,'(a40,i10)')   text1,my      !    <--param.h, meshx= 6
+!     read (08,'(a40,i10)')   text1,mz      ! 
       read (08,'(a40,i10)')   text1,n_MCsteps ! Maximum iteration count of MC
       read (08,'(a40,f20.0)') text1,rcut    ! Cutoff radius of spin interaction
       read (08,'(a40,f20.0)') text1,rcutC   ! Cutoff radius of ES interaction
@@ -3280,9 +3283,10 @@
         OPEN (unit=11,file=praefixc//'.11'//suffix2, &
                 status='unknown',position='append',form='formatted')
 !
-        write(11,602) mx,my,mz,n_MCsteps,rcut,rcutC, &
+!       write(11,602) mx,my,mz,n_MCsteps,rcut,rcutC, &
+        write(11,602) n_MCsteps,rcut,rcutC,   &
                       itermax,toler,Jaa,Jbb,Jab
-  602   format('mx,my,mz,n_MCsteps=',3i5,i8,/, &
+  602   format('n_MCsteps=',i8,/, &
                'rcut,rcutCi=',2f8.1,/, &
                'itermax,toler=',i8,1pd11.3,/, & 
                'Jaa,Jbb,Jab=',3d11.3)
