@@ -12,7 +12,7 @@ above the Curie temperature (M. Tanaka et al., Phys. Rev. B, 2009), Ref.2.
 
 Electron spins of Fe(3+), Fe(2+) and O(2-) in cubic cells
 
-Microwaves of giga-Hertz frequency
+Microwaves of giga-Hertz frequency, like 2.5 GHz
 
 Dissipated spin molecular dynamics simulation 
 
@@ -23,19 +23,19 @@ Dissipated spin molecular dynamics simulation
 
 ## Numerical Code, Parameters and Files
 
-@spin_nucCLD7M6a.f03: numerical code
+1) @spin_nucCLD7M6a.f03: numerical code
 
-param_spinRL6.h: parameters 
+2) param_spinRL6.h: parameters 
 
  > number of nodes, total of irons and oxygens, p3m resolution
   
-SAI106_config.START1: configuration
+3) SAI106_config.START1: configuration
 
  > physical run time, lattice sizes, number of cells, exchange integrals for Fe and O,
   period of microwave magnetic field, temperature, Curie temprature, etc.
-  About 3,000,000 steps are required !
+ About 3,000,000 steps are required !
 
-magnetite8.xyz: magnetite in a cubic lattice
+4) Magnetite in a cubic lattice: magnetite8.xyz for initialization
 
 ## References
 
