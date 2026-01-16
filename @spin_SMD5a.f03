@@ -477,10 +477,10 @@
         open (unit=12,file=praefixi//'.12'//suffix1, & ! Only suffix1
                                    status='old',form='unformatted')
 !
-!                  +++++ +++++ +++++ mx*xleng0
+!                   +++++ +++++ +++++ mx*xleng0
         read(12) t8,xleng,yleng,zleng,rcut,rcutC,Temp,TCurie, &
                  tmax,dt,cptot
-!                aaaa aa aaaaa       aaaa aaaaa aaaa aaaaaa    
+!                aaaa aa aaaaa        aaaa aaaaa aaaa aaaaaa    
         read(12) x,y,z,vx,vy,vz,ch,mass,ag,ep
         read(12) x_0,y_0,z_0,rintC
         read(12) spx,spy,spz,sp2,spx00,spy00,spz00,r_ij
@@ -498,11 +498,13 @@
                  usys,conv,aitr,psdt,tfix,uss,usb,tsx,tsy,tsz,sum_mb,&
                  u_Fe,u_O,fdt4,vdt4,idt4,timeh
         close(12)
+!
+!    # Change READ_CONF #
+!          tmax, cptot, dtwr, dtwr2 
+!
+        call READ_CONF (xleng0,yleng0,zleng0,rank)
       end if
 !
-      xleng0= xleng/mx
-      yleng0= yleng/my
-      zleng0= zleng/mz
 !
       if(rank.eq.0) then
         open (unit=11,file=praefixc//'.11'//suffix2, &
