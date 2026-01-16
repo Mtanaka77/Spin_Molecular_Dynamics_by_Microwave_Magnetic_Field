@@ -18,7 +18,7 @@ Dissipation spin molecular dynamics simulation
 
   > Execution of a few 1,000,000 steps of $ Delta t= 0.001 $ ps
 
-  > Metropolis criterion to accept/reject for the next steps
+Metropolis criterion is used to accept/reject in the next steps
 
 
 ## Numerical Code, Parameters and Files
