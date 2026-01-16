@@ -14,7 +14,7 @@ Electron spins of Fe(3+), Fe(2+) and O(2-) in cubic cells
 
 Microwaves of giga-Hertz frequency, like 2.5 GHz
 
-Dissipated spin molecular dynamics simulation 
+Dissipation spin molecular dynamics simulation 
 
   > Execution of a few 1,000,000 steps of $ Delta t= 0.001 $ ps
 
@@ -23,13 +23,13 @@ Dissipated spin molecular dynamics simulation
 
 ## Numerical Code, Parameters and Files
 
-1) @spin_nucCLD7M6a.f03: numerical code
+1) @spin_SMD5a.f03: numerical code
 
-2) param_spinRL6.h: parameters 
+2) param_spinRL5.h: parameters 
 
  > number of nodes, total of irons and oxygens, p3m resolution
   
-3) SAI106_config.START1: configuration
+3) SAI105_config.START1: configuration
 
  > physical run time, lattice sizes, number of cells, exchange integrals for Fe and O,
   period of microwave magnetic field, temperature, Curie temprature, etc.
