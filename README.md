@@ -23,7 +23,7 @@ Dissipation spin molecular dynamics simulation
 
 ## Numerical Code, Parameters and Files
 
-1) @spin_SMD5a.f03: Numerical simulation code, odd number of processors in the z direction
+1) @spin_SMD5a.f03: Dissipation spin molecular dynamics code, odd number of processors in the z direction
 
 2) param_spinRL5.h: Parameters 
 
