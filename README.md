@@ -23,17 +23,17 @@ Dissipation spin molecular dynamics simulation
 
 ## Numerical Code, Parameters and Files
 
-1) @spin_SMD5a.f03: numerical code, odd number of processors in the z direction
+1) @spin_SMD5a.f03: Numerical simulation code, odd number of processors in the z direction
 
-2) param_spinRL5.h: parameters 
+2) param_spinRL5.h: Parameters 
 
  > number of nodes, total of irons and oxygens, p3m resolution
   
-3) SAI105_config.START1: configuration
+3) SAI105_config.START1: Configuration file
 
  > physical run time, lattice sizes, number of cells, exchange integrals for Fe and O,
   period of microwave magnetic field, temperature, Curie temprature, etc.
- About 3,000,000 steps are required !
+  About 1,000,000 steps are required !
 
 4) Magnetite in a cubic lattice: magnetite8.xyz for initialization
 
