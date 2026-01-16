@@ -23,12 +23,12 @@ Metropolis criterion is used to accept/reject in the next steps
 
 ## Numerical Code, Parameters and Files
 
-1) @spin_SMD5a.f03: Dissipative spin molecular dynamics. Odd number of processors
-in the z direction is required. Read the simulation code for details !!
+1) @spin_SMD5a.f03: Dissipative spin molecular dynamics. An odd number of processors
+in the z direction is required for one's choice. Read the simulation code for details !!
 
 3) param_spinRL5.h: Parameters 
 
- > number of nodes, total of irons and oxygens, p3m resolution
+ > number of nodes, total cells of irons and oxygens, p3m resolution
   
 3) SAI105_config.START1: Configuration file
 
