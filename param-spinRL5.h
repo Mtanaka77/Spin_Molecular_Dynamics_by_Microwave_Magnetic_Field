@@ -7,7 +7,7 @@
       real*8      av_start
 !                          **
       parameter   (num_proc=5)
-      parameter   (np0=7000,nbx=300,nhs=5000)   ! for 5x5x5
+      parameter   (np0=7000,nbx=300,nhs=5000)    ! for 5x5x5
       parameter   (meshx=5,meshy=5,meshz=5)
       parameter   (P_max=3,MINTPOL=4*50048)
       parameter   (av_start=0.75d0)

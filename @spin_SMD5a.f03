@@ -19,7 +19,7 @@
 !*      by a microwave magnetic field, M. Tanaka, H. Kono, and   *
 !*      K. Maruyama, Phys. Rev. B, 79, 104420 (2009).            *
 !*                                                               *
-!** First: 2007/7/07 *********************** Update: 2026/1/15 ***
+!** First: 2007/7/07 *********************** Update: 2026/1/16 ***
 !
 !  Large number of cells... 
 !  1) As convergence is poor, a small system is first organized. 
@@ -3821,7 +3821,7 @@
 !
       amz= sqrt(2*s2/ns)
 !
-      if(Bmw.gt.1.d-5) then
+      if(Bmw.gt.1.d-5 .and. is.gt.40) then
         chi_real= mue_B*amz/Bmw
         chi_imag= 2*(mue_B*B00*ss/ns)/Bmw**2
 !
@@ -3831,8 +3831,14 @@
                '   chi_r, chi_i=',1p2d11.3,/)
       else
         write(11,*) 'Magnetic susceptibility is not'
-        write(11,*) '  calculated as Bmw = 0 ......'
+        write(11,*) ' calculated as Bmw= 0 or is<40 ......'
       end if
+!
+!
+      call lplmax (magx,emax1,emin1,is)
+      call lplmax (magy,emax2,emin2,is)
+      call lplmax (magz,emax3,emin3,is)
+      emax = amax1(emax1,emax2,emax3,-emin1,-emin2,-emin3)
 !
 !
       call lplmax (magx,emax1,emin1,is)
