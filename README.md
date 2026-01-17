@@ -18,7 +18,7 @@ Metropolis criterion is used to accept/reject in the MC step
 
 Dissipation spin molecular dynamics simulation in the MD step 
 
-  > Execution of a few 1,000,000 steps of $ Delta t= 0.001 $ ps
+  > Execution of a few 1,000,000 steps for $ Delta t= 0.001 $ ps
 
 
 ## Numerical Code, Parameters and Files
