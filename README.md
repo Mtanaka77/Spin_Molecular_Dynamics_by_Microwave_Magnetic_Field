@@ -16,7 +16,7 @@ Microwaves of giga-Hertz frequency, like 2.5 GHz
 
 Metropolis criterion is used to accept/reject in the MC process
 
-Dissipation spin molecular dynamics simulation in the MD process
+Dissipation spin molecular dynamics simulation is used in the MD process
 
   > Execution of a few 1,000,000 steps for $ Delta t= 0.001 $ ps
 
