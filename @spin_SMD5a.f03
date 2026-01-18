@@ -2,14 +2,14 @@
 !*                                                               *
 !*   ### Dissipative Spin Molecular Dynamics Simulation ###      * 
 !*                                                               *
-!*    Numerical code by:                                         *
-!*      Author: Motohiko Tanaka, PhD., Nagoya 464, Japan.        *
-!*      https://github.com/Mtanaka77/                            *
+!*      Numerical code by:                                       *
+!*        Author: Motohiko Tanaka, PhD, Chikusa, Nagoya, Japan.  *
+!*        https://github.com/Mtanaka77/                          *
 !*                                                               *
-!*      @spin_SMD5a.f03                                          *
-!*      param-spinRL5.h,                                         *
-!*      SAI105_config.START1,                                    *
-!*      magnetite8.xyz                                           * 
+!*       @spin_SMD5a.f03: Numerical code                         *
+!*       param-spinRL5.h: Basic parameters                       *
+!*       SAI105_config.START1: Configuration file                *
+!*       magnetite8.xyz:  Initial xyz file                       * 
 !*                                                               *
 !*   Spin dynamics under the microwave H field for electrons,    *
 !*   while nuclei feel forces from spins, Neighboring nuclei     * 
@@ -1045,14 +1045,16 @@
         wt1= 0
       end if
 !
-!----------------------------------------------------------------
-!* MC step is executed by all nodes if kstart= 0
-!   Arrays spx00...spz00() are used in MC - do not use spx-spz !
-!----------------------------------------------------------------
+!*****************************************************************
+!* MC step is executed by all nodes if kstart= 0                 * 
+!*  Arrays spx00...spz00() are used in MC - do not use spx-spz ! *
+!*****************************************************************
 !
  2100 continue
       if(kstart.eq.0) then
+!     ++++++++++++++++++++
 !
+!  kstart= 0
         if(MC_first) then   ! Organize a seed one cell
           np100= np10       ! one cell
           nstep_MC = 50001
@@ -1088,6 +1090,8 @@
         go to 2000    !<<-- kstart= 0
       else
 !
+!  kstart= 1
+!  +++++++++
         if(it.eq.1) then
           call magnetiz (spx,spy,spz,g,wx7,wy7,wz7,wn7,u1,uav7, &
                          wt7,np1,-1)
@@ -1104,12 +1108,12 @@
         go to 3000    !!<-- 3000: 211 lines below 
       end if
 !
-!--------------------------------------
-!* Energy minimization by MC 
-!--------------------------------------
+!**************************************
+!* Energy minimization by MC process  *
+!**************************************
 !  Flip a spin
 !
- 2000 i_MC= 0
+ 2000 i_MC= 0  !<-- kstart= 0
 !
       Bex= 0
       Bey= 0
@@ -1206,7 +1210,8 @@
           spz00(j)= spz0(j)
         end if
       end if
-!                         <-- 
+!                          
+
       if(rank.eq.0) then
         call magnetiz (spx00,spy00,spz00,g,wx7,wy7,wz7,wn7,u1,uav7, &
                        wt7,np100,1)
@@ -1246,7 +1251,7 @@
         do 230 ja= i1y,i2y
         do 230 ka= i1z,i2z
 !
-! to enable convergence to equilibrium...  11/13/2010
+! To enable convergence to equilibrium...  11/13/2010
 !
         if(mod(ia,3).eq.0 .and. &
            mod(ja,3).eq.0 .and. &
@@ -1255,7 +1260,7 @@
 ! Seed cell
           do 240 l= 1,np10
           i= i +1
-          spx(i)= spx00(l)  ! spx() are used in md
+          spx(i)= spx00(l)  ! spx() are used in MD
           spy(i)= spy00(l)
           spz(i)= spz00(l)
   240     continue
@@ -1313,6 +1318,7 @@
 !     f1= J00 *t_unit/hbar        J00= 10 meV
 !     g1= g*mue_B*B00 *t_unit/hbar   B00= 100 gauss
 !-----------------------------------------------------------
+!              !<-- ksrart= 1
  3000 continue
 !                                           *****
       fw= fw00*(1.d0 -exp(-t8/tau_b)) * sin(omg_b*t8)  ! -m*b < 0
@@ -1360,8 +1366,10 @@
       qsz= qsz +f1*j_ki*(spz1(j) +spz(j))
   320 continue !   f1*j_ij * 2s
 !
-!* Equation is: ds_i/dt= s_i*qq/hbar -(s_i-s_i0)/tau,
-!                where qq= sum_j (2*Jij*s_j) -g*mue_B*B
+!*********************************************************
+!* Equation: ds_i/dt= s_i*qq/hbar -(s_i-s_i0)/tau,       *
+!*               where qq= sum_j (2*Jij*s_j) -g*mue_B*B  *
+!*********************************************************
 !
       qsx= qsx -g1*Bex
       qsy= qsy -g1*Bey
