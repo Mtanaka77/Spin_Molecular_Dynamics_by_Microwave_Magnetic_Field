@@ -3,7 +3,7 @@
 !*   ### Dissipative Spin Molecular Dynamics Simulation ###      * 
 !*                                                               *
 !*      Numerical code by:                                       *
-!*        Author: Motohiko Tanaka, PhD, Chikusa, Nagoya, Japan.  *
+!*        Author: Motohiko Tanaka, PhD, Chikusa,Nagoya,Japan.    *
 !*        https://github.com/Mtanaka77/                          *
 !*                                                               *
 !*       @spin_SMD5a.f03: Numerical code                         *
