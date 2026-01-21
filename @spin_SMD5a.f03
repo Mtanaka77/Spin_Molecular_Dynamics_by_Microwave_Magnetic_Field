@@ -121,18 +121,21 @@
 !*    m_unit= 1.67261d-24    ! m_H                               *
 !*                                                               *
 !*****************************************************************
-!*  To get a free format of f90/f03, convert f77 into:           *
-!*  convert: :%s/^c/!/  :%s/^*/!/  and :wq                       *
+!* >> To get a free format of f90/f03, convert f77 into:         *
 !*                                                               *
-!*  tr 'a-z' 'a-z' <@spin_nucCLD7M3.f >@spin_nucCLD7M3.f03       *
-!*  On Fortran 2003, "use, intrinsic :: iso_c_binding"           *
-!*  Format statement is DIFFERENT in Fortran 2003.               *
+!*   Inside the vi editor: :%s/^c/!/, :%s/^*/!/, and :wq         *
+!*   Outside the vi editor:                                      *
+!*     tr 'a-z' 'a-z' <@spin_SMD5a.f >@spin_SMD5a.f03            *
+!*                                                               *
+!*   On Fortran 2003, "use, intrinsic :: iso_c_binding"          *
+!*   Also,format statement on Fortran 2003 is DIFFERENT.         *
 !*****************************************************************
-!  Parallel Fortran 2003:                                        *
-!% mpif90 -mcmodel=medium -fpic -o a.out @spin_SMD5a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
-! Debian-13: -fallow-argument-mismatch
-!                                                                *
-!% mpiexec -n 5 a.out &                                         *
+!* >> Parallel Fortran 2003/2008                                 *
+!*                                                               *
+!* % mpif90 -mcmodel=medium -fpic -o ax.out @spin_SMD5a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
+!* % mpiexec -n 5 ax.out &                                       *
+!*                                                               *
+!*  Debian-13 OS may need "-fallow-argument-mismatch"            *
 !*****************************************************************
 !
       program spin37
@@ -336,8 +339,8 @@
                  if_LJ(np0),spec(np0),site(np0)
 !
       integer(C_INT) nlist(np0),lmax,k0,iac1,iac2,irej,modes,kwrite,  &
-                 n_of_j,np000,np100,ia,ja,ka,i1x,i2x,i1y,i2y,i1z,i2z, &
-                 n_MCsteps,nt_p3m
+                 n_of_j,np10,np20,np000,np100,n_MCsteps,nt_p3m,       &
+                 ia,ja,ka,i1x,i2x,i1y,i2y,i1z,i2z
 !
       real(C_DOUBLE) t8,dt,dts,dt0,dth,Bex,Bey,Bez,spin2,spin3, &
                  Jaa,Jbb,Jab,J00,B00,Bapx,Bapy,Bapz,Bap,        &
@@ -444,9 +447,9 @@
 !
 ! xleng is expanded and redeined in "init"
 !
-        call init (x,y,z,ch,spx,spy,spz,sp2,spec,site,  &
-                   xleng0,yleng0,zleng0,np1,np2,np000,  & !<- np000
-                   i1x,i2x,i1y,i2y,i1z,i2z,rank,size)
+        call init (x,y,z,ch,spx,spy,spz,sp2,spec,site,     &
+                   xleng0,yleng0,zleng0,np1,np2,np10,np20, &
+                   np000,i1x,i2x,i1y,i2y,i1z,i2z,rank,size)
 !
         do i= 1,np1+np2
         x_0(i)= x(i)
@@ -745,7 +748,7 @@
       l= 0
 !
       do 32 j= 1,np1
-      if(j.eq.i) go to 32   ! avoid itself
+      if(j.eq.i) go to 32   ! avoid j=i
 !
       xx= x_0(i) -x_0(j)
       yy= y_0(i) -y_0(j)
@@ -889,7 +892,7 @@
       if(kstart.eq.0) then
 !
 ! ------------------------------------------------
-!*  mass, radius, LJ, and initial velocity
+!*  The mass, radius, LJ, and initial velocity
 ! ------------------------------------------------
 !
       do i= 1,np1+np2
@@ -897,6 +900,7 @@
         mass(i)= m_Fe
         ag(i)= rad_Fe
         ep(i)= elj_Fe*(Kcal/mol)/kT
+!
       else
         mass(i)= m_O
         ag(i)= rad_O
@@ -977,7 +981,7 @@
         write(21,*) '  '
         write(21,*) '### coulomb force pairs...'
         do 910 i= 1,np1+np2
-        if(i.eq.1) write(21,*) '>> For iron ...'
+        if(i.eq.1) write(21,*)     '>> For iron ...'
         if(i.eq.np1+1) write(21,*) '>> For oxygen ...'
 !
         if(i.le.np1) then
@@ -1056,12 +1060,12 @@
 !
 !  kstart= 0
         if(MC_first) then   ! Organize a seed one cell
-          np100= np000      ! One cell - np000 
+          np100= np10       ! One cell - spx-spz
           nstep_MC = 50001
           kwrite   = 10000
 !
         else                ! Initialize a large system with the organized seed cell
-          np100= np1+np2    ! all atoms
+          np100= np1
           nstep_MC = n_MCsteps  ! 1000001 
           kwrite   =   50000    !   50000
         end if
@@ -1721,7 +1725,7 @@
 !                         +++++++
 !
         write(23,'(i6)') np1+np2
-        write(23,'(a30)') 'all atoms in the entire system'
+        write(23,'(a30)') 'All atoms in the entire system'
 !
         do i= 1,np1
         write(23,123) 'Fe',x(i),y(i),z(i)
@@ -1786,17 +1790,18 @@
 !
 !% mpif90 -mcmodel=medium -fpic -o ay.out @spin_SMD5h.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
 !                                                                *
-        Usys8(is)= u1/np1  ! <Usys>= <U_O +U_Fe>
-        Usys(is)=  u1/np1
+        Usys8(is)= u1/(np1+np2)  ! <Usys>= <U_O +U_Fe>
+        Usys(is)=  u1/(np1+np2)
+!
         uss(is) =  um/np1
         usb(is) =  ub/np1
 !
         U_Fe(is)= U_Fe(is)/np1
         U_O(is) = U_O(is) /np2
 !
-        e_sp  = e_sp/np1
-        e_c_r = e_c_r/np1
-        e_LJ  = e_LJ/np1
+        e_sp  = e_sp /(np1+np2)
+        e_c_r = e_c_r/(np1+np2)
+        e_LJ  = e_LJ /(np1+np2)
 !
         t4 = t8
         Bex4= B00*Bex
@@ -2005,13 +2010,13 @@
       pi= 4.d0*atan(1.d0)
       sqrtpi= sqrt(pi)
 !
-      do i= 1,np1+np2
+      do i= 1,np1
       fx(i)= 0   ! note: not defined for i > np1
       fy(i)= 0
       fz(i)= 0
       end do
 !
-      do i= i3(rank),i4(rank)
+      do i= 1,np1+np2
       fxC(i)= 0
       fyC(i)= 0
       fzC(i)= 0
@@ -2075,9 +2080,9 @@
 !     ref. J.Rustad, B.Hay, and J.Halley, J.Chem.Phys. 102, 427 (1995).
 !             ***
 !
-      if(spec(i).eq.0) then         ! O-
-        if(site(j).eq.1) go to 300  !  -Fe(A)
-        if(site(j).eq.2) go to 400  !  -Fe(B) +3, +2
+      if(spec(i).eq.0) then           ! O-
+        if(site(j).eq.1) go to 300    !  -Fe(A)
+        if(site(j).eq.2) go to 400    !  -Fe(B) +3, +2
       else                            ! Fe-
         if(spec(j).eq.0) then         !   -O
           if(site(i).eq.1) go to 300  ! Fe on A-site
@@ -2092,7 +2097,7 @@
       go to 600
 !
   400 continue
-      if(.true.) go to 300  !<-- ??
+      if(.true.) go to 300  !<-- 
 !     +++++++++ 
 !
       if(spec(i).eq.1 .or. spec(j).eq.1) then
@@ -2146,9 +2151,9 @@
 !
 !
 !-----------------------------------------------------------------
-      subroutine init (x,y,z,ch,spx,spy,spz,sp2,spec,site, &
-                       xleng0,yleng0,zleng0,np1,np2,np000, & 
-                       i1x,i2x,i1y,i2y,i1z,i2z,rank,size)
+      subroutine init (x,y,z,ch,spx,spy,spz,sp2,spec,site,     &
+                       xleng0,yleng0,zleng0,np1,np2,np10,np20, &
+                       np000,i1x,i2x,i1y,i2y,i1z,i2z,rank,size)
 !-----------------------------------------------------------------
       use, intrinsic :: iso_c_binding
       implicit none
@@ -2165,7 +2170,7 @@
                  a(3),b(3),c(3),qFe2,qFe3,qo
       real(C_DOUBLE) eps,ranff
       integer(C_INT) spec(np0),site(np0),np1,np2,rank,size,  &
-                 np000,np10,np20,mx,my,mz,i,l,j,lo,          & !<- np000
+                 np000,np10,np20,mx,my,mz,i,l,j,lo,          & 
                  ia,ja,ka,ic,jc,kc,i1,i2,j1,j2,k1,k2,        &
                  nFe2,nFe3,ierror,i1x,i2x,i1y,i2y,i1z,i2z
       character  char*2,text1*173  !text1*125
