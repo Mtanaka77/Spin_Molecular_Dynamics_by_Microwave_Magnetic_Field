@@ -130,11 +130,14 @@
 !*****************************************************************
 !* Fortran 2003 of gfortran:                                     *
 !*                                 2026/1/19                     *
-!% mpif90 -mcmodel=medium -fpic -O2 -o ax.out @spin_SMD5a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
+!% mpif90 -mcmodel=medium -fpic -O2 -o a.out @spin_SMD5a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
 !* Debian-13: -fallow-argument-mismatch                          *
 !*                                                               *
-!% mpiexec -n 5 ax.out &                                         *
+!% mpiexec -n 5 a.out &                                          *
 !*****************************************************************
+!   if(rank.eq.0) then, call magnetiz at every time, L.1675
+!   open (unit=23,231a.xyz), if_file23= .false., L.1730.
+!-----------------------------------------------------------------
 !
       program spin37
       use, intrinsic :: iso_c_binding
@@ -316,7 +319,7 @@
                  cnt_send,ierror,mpierror,i_MC,ifcmp,kk
 !
       real(C_DOUBLE) e_sp0,e_c_r0,e_LJ0,e_sp1,e_c_r1,e_LJ1
-      logical  if_LJ0
+      logical   if_LJ0,if_file23/.true./
 !
       real(C_DOUBLE) x,y,z,spx,spy,spz,ch,fx,fy,fz,fxC,fyC,fzC, &
                      Jint,r_ij,rintC,fc1,fc2,fcLJ
@@ -1666,7 +1669,6 @@
       um= uu2(2)
       u1= ub + um
 !
-!
 !******************************************************************
 ! ---- Diagnosis ----------------- On the major node ------------ *
 !******************************************************************
@@ -1722,9 +1724,15 @@
 !*  Make xyz file for DS Viewer   *
 !**********************************
 !
-        open (unit=23,file=praefixc//suffix2//'mg.xyz', &
-                  status='unknown',position='append',form='formatted')
-!                         +++++++
+        if(if_file23) then
+          if_file23= .false.
+!
+          open (unit=23,file=praefixc//'.23'//suffix2,form='formatted')
+        else
+!
+          open (unit=23,file=praefixc//'.23'//suffix2, &
+                   status='unknown',position='append',form='formatted')
+        end if
 !
         write(23,'(i6)') np1+np2
         write(23,'(a30)') 'all atoms in the entire system'
@@ -1881,9 +1889,9 @@
 !
           write(11,770)
   770     format(//,'# MD Run is performed #',/, &
-            '      t8   it   is     itr  Usys      U_Fe      U_O     ',&
-            '  conv      f*dts/m_i    v*dt      e_sp     e_c_r    ',   &
-            ' e_LJ     magz   deV_x(Fe)   deV_x(O)   cpu(min)')
+            '    t8      it     is  itr  Usys      U_Fe      U_O     ', &
+            '  conv      f*dts/m_i  v*dt      e_sp     e_c_r     e_LJ', &
+            '      magz       deV_x(Fe)  deV_x(O) cpu(min)')
           write(11,*)
         end if
 !
