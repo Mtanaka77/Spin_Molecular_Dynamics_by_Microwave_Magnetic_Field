@@ -129,14 +129,16 @@
 !*  Format statement is DIFFERENT in Fortran 2003.               *
 !*****************************************************************
 !* Fortran 2003 of gfortran:                                     *
-!*                                 2026/1/19                     *
+!*                                                               *
 !% mpif90 -mcmodel=medium -fpic -O2 -o a.out @spin_SMD5a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
 !* Debian-13: -fallow-argument-mismatch                          *
 !*                                                               *
 !% mpiexec -n 5 a.out &                                          *
 !*****************************************************************
-!   if(rank.eq.0) then, call magnetiz at every time, L.1675
-!   open (unit=23,231a.xyz), if_file23= .false., L.1730.
+!   if(rank.eq.0) then, call magnetiz in every step, L.1675
+!   open (unit=23,231a.xyz), L.1730, 2540.
+!   open (unit=77,231a.ps) Always in PS plots, L.255,1910,1975  
+!     note: (3A ) (3 B) (2B ), L.3740 - missing ) in PS plots
 !-----------------------------------------------------------------
 !
       program spin37
@@ -145,7 +147,7 @@
       include    'mpif.h'
       include    'param-spinRL5.h'
 !
-      integer(C_INT) size,rank,key,ierror,kstart, &
+      integer(C_INT) size,rank,key,ierror,kstart,     &
                      mx,my,mz,ir0,igrp,n_MCsteps,nt_p3m
       real(C_DOUBLE) cputime,wtime,wtime1,wtime2
       character*8    label,cdate*10,ctime*8
@@ -251,8 +253,8 @@
         close (11)
 !
 !* Initial FT77 file=praefixc, form='formatted'
-        open (unit=77,file=praefixc//'.77'//suffix2,form='formatted')
-!
+        open (unit=77,file=praefixc//'.77'//suffix2//'.ps', &
+                                                   form='formatted')
         nframe= 4
         call gopen (nframe)
         close (77)
@@ -319,7 +321,7 @@
                  cnt_send,ierror,mpierror,i_MC,ifcmp,kk
 !
       real(C_DOUBLE) e_sp0,e_c_r0,e_LJ0,e_sp1,e_c_r1,e_LJ1
-      logical   if_LJ0,if_file23/.true./
+      logical  if_LJ0
 !
       real(C_DOUBLE) x,y,z,spx,spy,spz,ch,fx,fy,fz,fxC,fyC,fzC, &
                      Jint,r_ij,rintC,fc1,fc2,fcLJ
@@ -353,7 +355,7 @@
                  omg_b,rnd,                                     &
                  f1,g1,b1,prb,qsx,qsy,qsz,rsx,rsy,rsz,hh1,hh2,  &
                  qq,rqq,dthg,dthqq,rdiv,spmin,                  &
-                 alp,xx,yy,zz,rr,rr0,toler,deps,Usys8(nhs),     &
+                 alp,xx,yy,zz,rr,rr0,toler,deps,                &
                  ss,smax,sav,t_unit,e_unit,a_unit,m_unit,m_Fe,m_O, &
                  pi,pi2,th,ph,tmax,tmax0,cptot,unif1(2),unif2(2),  &
                  xleng0,yleng0,zleng0,sss,rlist(np0),           &
@@ -403,8 +405,7 @@
                     uss(nhs),usb(nhs),tsx(nhs,3),tsy(nhs,3),tsz(nhs,3), &
                     sum_mb(nhs),U_Fe(nhs),U_O(nhs),ds_Fe(nhs),ds_O(nhs),&
                     fdt4(nhs),vdt4(nhs),idt4(nhs),timeh(nhs)
-      logical       MC_first,ft06_start
-      data          MC_first/.true./,ft06_start/.true./
+      logical       MC_first/.true./,ft06_start/.true./
 !
       real(C_DOUBLE) alpha,xleng,yleng,zleng
       integer(C_INT) PP
@@ -1640,10 +1641,10 @@
       ub1= 0
       um1= 0
 !
-      do 590 i= i1(rank),i2(rank)
+      do i= i1(rank),i2(rank)
       ub1= ub1 + b1 * (Bex*spx(i) +Bey*spy(i) +Bez*spz(i))
 !
-      do 590 k= 1,nintS(i)
+      do k= 1,nintS(i)
       j= lintS(k,i)
 !
 !* Fold back
@@ -1658,7 +1659,8 @@
       J_ki= Jint(k,i)*(r_ij(k,i)/rr)**n_of_j
 !
       um1= um1 - 0.5d0*J00* J_ki*(spx(i)*spx(j) +spy(i)*spy(j) +spz(i)*spz(j))
-  590 continue
+      end do
+      end do
 !
       uu1(1)= ub1
       uu1(2)= um1
@@ -1668,6 +1670,7 @@
       ub= uu2(1)
       um= uu2(2)
       u1= ub + um
+!
 !
 !******************************************************************
 ! ---- Diagnosis ----------------- On the major node ------------ *
@@ -1682,6 +1685,7 @@
 !       - <m(t)*b(t)/b_0> = - integral m*b/b_0 dt /t 
 !
       if(iwrt1.eq.0) then
+!*
         open (unit=11,file=praefixc//'.11'//suffix2, &
                   status='unknown',position='append',form='formatted')
 !
@@ -1724,18 +1728,12 @@
 !*  Make xyz file for DS Viewer   *
 !**********************************
 !
-        if(if_file23) then
-          if_file23= .false.
-!
-          open (unit=23,file=praefixc//'.23'//suffix2,form='formatted')
-        else
-!
-          open (unit=23,file=praefixc//'.23'//suffix2, &
-                   status='unknown',position='append',form='formatted')
-        end if
+        open (unit=23,file=praefixc//suffix2//'.xyz', &
+                  status='unknown',position='append',form='formatted')
+!                                            ++++++
 !
         write(23,'(i6)') np1+np2
-        write(23,'(a30)') 'all atoms in the entire system'
+        write(23,'(a30)') 'All atoms in the entire system'
 !
         do i= 1,np1
         write(23,123) 'Fe',x(i),y(i),z(i)
@@ -1782,31 +1780,28 @@
         ds2= 0
 !
         do i= 1,np1
-        U_Fe(is)= U_Fe(is) +0.5*fc3*m_Fe*(vx(i)**2 +vy(i)**2 +vz(i)**2)
+        U_Fe(is)= U_Fe(is) +0.5d0*fc3*m_Fe*(vx(i)**2 +vy(i)**2 +vz(i)**2)
         ds1     = ds1 +sqrt((x(i)-x_0(i))**2 +(y(i)-y_0(i))**2 &
                                                      +(z(i)-z_0(i))**2)
         end do
 !
         do i= np1+1,np1+np2
-        U_O(is)= U_O(is) +0.5*fc3*m_O*(vx(i)**2 +vy(i)**2 +vz(i)**2)
+        U_O(is)= U_O(is) +0.5d0*fc3*m_O*(vx(i)**2 +vy(i)**2 +vz(i)**2)
         ds2    = ds2 +sqrt((x(i)-x_0(i))**2 +(y(i)-y_0(i))**2 &
                                                      +(z(i)-z_0(i))**2)
         end do
 !
-        ds_Fe(is) = ds1/np1 
-        ds_O(is)  = ds2/np2
+        ds_Fe(is)= ds1/np1 
+        ds_O(is) = ds2/np2
+!
+        U_Fe(is) = U_Fe(is)/np1
+        U_O(is)  = U_O(is) /np2
 !
         u1 = u1 + U_Fe(is) + U_O(is)
 !
-!% mpif90 -mcmodel=medium -fpic -o ay.out @spin_SMD5h.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
-!                                                                *
-        Usys8(is)= u1/np1  ! <Usys>= <U_O +U_Fe>
-        Usys(is)=  u1/np1
+        Usys(is)=  u1/np1   ! Usys= (um+ub+U_Fe+U_O)/np1
         uss(is) =  um/np1
         usb(is) =  ub/np1
-!
-        U_Fe(is)= U_Fe(is)/np1
-        U_O(is) = U_O(is) /np2
 !
         if(if_LJ0) then
           if_LJ0= .false.
@@ -1884,14 +1879,17 @@
         sum_mb(is)= del_en
 !
 !       if(is.eq.1) then
-        if(ft06_start) then
+        if(ft06_start) then 
           ft06_start= .false.
-!
+! 
           write(11,770)
   770     format(//,'# MD Run is performed #',/, &
-            '    t8      it     is  itr  Usys      U_Fe      U_O     ', &
-            '  conv      f*dts/m_i  v*dt      e_sp     e_c_r     e_LJ', &
-            '      magz       deV_x(Fe)  deV_x(O) cpu(min)')
+            '    t8     it     is   itr  Usys      U_Fe      U_O     ',&
+!            12123456712345678123451234123456789012345678901234567890
+            '  conv      f*dts/m_i v*dt      e_sp      e_c_r     e_LJ',&
+!            12345678901234567890123456789012345678901234567890123456
+            '      magz      deV_x(Fe) deV_x(O) cpu(min)')
+!            789012345678901234567890123456789012345678
           write(11,*)
         end if
 !
@@ -1903,7 +1901,7 @@
         write(11,771) t8,it,is,iter,Usys(is),U_Fe(is),U_O(is),conv(is), &
                  fdt8,vdt8,e_sp1,e_c_r1,e_LJ1,magz(is),ds_Fe(is),ds_O(is), &
                  wtime/60.d0
-  771   format('t=',f7.1,i8,i5,i4,1p6d10.2,3d10.2,0pf10.5,2f10.3,f8.2)
+  771   format('t=',f7.1,i8,i5,i4,1p6d10.2,3d10.2,0pf10.5,1p2d10.2,0pf8.2)
 !
 !                                                   ic= 0: Reset wx-wn
         call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,np1,0)
@@ -1913,7 +1911,7 @@
 !
 !
       if(iwrt2.eq.0) then
-        open (unit=77,file=praefixc//'.77'//suffix2, &
+        open (unit=77,file=praefixc//'.77'//suffix2//'.ps', &
                     status='unknown',position='append',form='formatted')
         time= t8  !<- real*4
 !
@@ -1975,7 +1973,7 @@
         write(11,*) ' Final: t8, tmax=',t8,tmax
         close (11)
 !
-        open (unit=77,file=praefixc//'.77'//suffix2, &
+        open (unit=77,file=praefixc//'.77'//suffix2//'.ps', &
                     status='unknown',position='append',form='formatted')
         call lplots 
         call gclose
@@ -2188,7 +2186,7 @@
                  t8,dt,tmax,cptot,xleng0,yleng0,zleng0,          &
                  a(3),b(3),c(3),qFe2,qFe3,qo
       real(C_DOUBLE) eps,ranff
-      integer(C_INT) spec(np0),site(np0),np1,np2,rank,size,np10,np20,  &
+      integer(C_INT) rank,size,spec(np0),site(np0),np1,np2,np10,np20,  &
                  mx,my,mz,i,l,j,lo,ia,ja,ka,ic,jc,kc,i1,i2,j1,j2,k1,k2,&
                  nFe2,nFe3,ierror,i1x,i2x,i1y,i2y,i1z,i2z
       character  char*2,text1*173  !text1*125
@@ -2216,11 +2214,20 @@
                               status='old',form='formatted')
 !
         read(17,'(i6)') np10 
-        read(17,'(a125)') text1
+        read(17,'(a173)') text1
       end if
 !
       call mpi_bcast ( np10,  1,mpi_integer,  0,mpi_comm_world,ierror)
-!     call mpi_bcast (text1,125,mpi_character,0,mpi_comm_world,ierror)
+      call mpi_bcast (text1,173,mpi_character,0,mpi_comm_world,ierror)
+!
+!% mpif90 -mcmodel=medium -fpic -O2 -o a.out @spin_SMD5f.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
+        if(rank.eq.0) then
+          open (unit=11,file=praefixc//'.11'//suffix2, &
+                    status='unknown',position='append',form='formatted')
+          write(11,*) 'np=',np10
+          write(11,'("text1=",a173,/)') text1
+          close (11)
+        end if
 !
       pi= 4.d0*atan(1.d0)
       pi2= 2*pi
@@ -2529,13 +2536,15 @@
 !
         close (18)
 !
-!* make xyz file for ds viewer
+!**********************************
+!* Make xyz file for DS Viewer    *
+!**********************************
 !
-        open (unit=23,file=praefixc//suffix2//'mg.xyz', &
+        open (unit=23,file=praefixc//suffix2//'.xyz', &
                                  status='unknown',form='formatted')
 !
         write(23,'(i6)') np1+np2
-        write(23,'(a30)') 'all atoms in the entire system'
+        write(23,'(a30)') 'All atoms in the entire system'
 !
         do i= 1,np1
         write(23,123) 'Fe',x(i),y(i),z(i)
@@ -2642,9 +2651,8 @@
 !                 **** ****
       integer*8   plan,pinv
 !
-      logical     first
+      logical     first/.true./
       common/fftsav/ plan,pinv,first
-      data        first /.true./
 !
       real(C_DOUBLE) fft_scale2
       complex*16  ei,eigq
@@ -3731,21 +3739,21 @@
       nxtick= 3
       nytick= 3
       call hplot1 (2,2,101,hha,ang1x,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thx)',8,' (3 B   ',8,0)
+                     '        ',8,'cos(thx)',8,' (3 B)  ',8,0)
       call hplot1 (2,2,101,hha,angax,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thx)',8,' (3A    ',8,1)
+                     '        ',8,'cos(thx)',8,' (3A )  ',8,1)
       call hplot1 (2,3,101,hha,ang2x,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thx)',8,' (2B)   ',8,0)
+                     '        ',8,'cos(thx)',8,' (2B )  ',8,0)
 !
       call lplmax (ang1y,famax1,famin,101)
       call lplmax (ang2y,famax2,famin,101)
       famax= amax1(famax1,famax2)
       call hplot1 (3,2,101,hha,ang1y,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thy)',8,' (3 B   ',8,0)
+                     '        ',8,'cos(thy)',8,' (3 B)  ',8,0)
       call hplot1 (3,2,101,hha,angay,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thy)',8,' (3A    ',8,1)
+                     '        ',8,'cos(thy)',8,' (3A )  ',8,1)
       call hplot1 (3,3,101,hha,ang2y,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thy)',8,' (2B)   ',8,0)
+                     '        ',8,'cos(thy)',8,' (2B )  ',8,0)
 !---------------------
       call chart
 !---------------------
@@ -3754,11 +3762,11 @@
       call lplmax (ang2z,famax2,famin,101)
       famax= amax1(famax1,famax2)
       call hplot1 (2,2,101,hha,ang1z,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thz)',8,' (3 B   ',8,0)
+                     '        ',8,'cos(thz)',8,' (3 B)  ',8,0)
       call hplot1 (2,2,101,hha,angaz,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thz)',8,' (3A    ',8,1)
+                     '        ',8,'cos(thz)',8,' (3A )  ',8,1)
       call hplot1 (2,3,101,hha,ang2z,famax,famin,ILN,nxtick,nytick,&
-                     '        ',8,'cos(thz)',8,' (2B)   ',8,0)
+                     '        ',8,'cos(thz)',8,' (2B )  ',8,0)
 !---------------------
       call chart
 !---------------------
@@ -3857,8 +3865,8 @@
       ns= 0
 !
       do 200 k= is0,is-40
-      ss= ss +(magz(k) -av_mz(k))*Bextz(k)   ! magz= -g*<sz>
-      s2= s2 +(magz(k) -av_mz(k))**2         ! <dm**2>
+      ss= ss +(magz(k) -av_mz(k))*Bextz(k)   ! magz -g*<sz>
+      s2= s2 +(magz(k) -av_mz(k))**2         ! magz -<dm**2>
       ns= ns +1
   200 continue
 !
@@ -3870,15 +3878,11 @@
       call lplmax (magy,emax2,emin2,is)
       call lplmax (magz,emax3,emin3,is)
       emax = amax1(emax1,emax2,emax3,-emin1,-emin2,-emin3)
-!
-!
-      call lplmax (magx,emax1,emin1,is)
-      call lplmax (magy,emax2,emin2,is)
-      call lplmax (magz,emax3,emin3,is)
-      emax = amax1(emax1,emax2,emax3,-emin1,-emin2,-emin3)
       emin = -emax
+!
       nxtick= 3
       nytick= 3
+!
       call lplot1 (2,4,is,timeh,magx,emax,emin,ILN,nxtick,nytick,&
                    'magnet-x',8,'        ',8,'        ',8,0)
       call lplot1 (2,5,is,timeh,magy,emax,emin,ILN,nxtick,nytick,&
@@ -3886,12 +3890,12 @@
       call lplot1 (2,6,is,timeh,magz,emax3,emin3,ILN,nxtick,nytick,&
                    'magnet-z',8,' time   ',8,'        ',8,0)
 !
-!     call lplmax (spinx,emax1,emin1,is)
+      call lplmax (spinx,emax1,emin1,is)
       call lplmax (spinz,emax2,emin2,is)
       emax = amax1(emax1,emax2,-emin1,-emin2)
       emin = -emax
-!     call lplot1 (3,4,is,timeh,spinx,emax,emin,ILN,nxtick,nytick,&
-!                  'spin-x.7',8,'        ',8,'        ',8,0)
+      call lplot1 (3,4,is,timeh,spinx,emax,emin,ILN,nxtick,nytick,&
+                   'spin-x.7',8,'        ',8,'        ',8,0)
       call lplot1 (3,5,is,timeh,spinz,emax,emin,ILN,nxtick,nytick,&
                    'spin-z.7',8,'        ',8,'        ',8,0)
 !
@@ -3903,52 +3907,47 @@
       call chart
 !------------------------
 !
-      call lplmax (Usys,emax,emin,is)
-      call lplot1 (2,4,is,timeh,Usys,emax,emin,ILN,nxtick,nytick,&
+      call lplmax (Usys,emax,emin,is)  ! Usys= (ub+um+U_O+U_Fe)/(np1+np2)
+      call lplot1 (2,4,is,timeh,Usys,emax,0.,ILN,nxtick,nytick,&
                    'Usys    ',8,'        ',8,'        ',8,0)
 !
-      call lplmax (Bextx,emax,emin,is)
-      emax = amax1(emax,-emin)
-      emin = -emax
-      call lplot1 (2,5,is,timeh,Bextx,emax,emin,ILN,nxtick,nytick,&
-                   'Bextx.7 ',8,'        ',8,'        ',8,0)
-!
-      call lplmax (Bextz,emax,emin,is)
-      emax = amax1(emax,-emin)
-      emin = -emax
-      call lplot1 (2,6,is,timeh,Bextz,emax,emin,ILN,nxtick,nytick,&
-                   'Bextz.7 ',8,'  time  ',8,'        ',8,0)
-!
-      call lplmax (uss,emax,emin,is)
-      call lplot1 (3,4,is,timeh,uss,emax,emin,ILN,nxtick,nytick,&
+      call lplmax (uss,emax1,emin1,is)  ! um/np1
+      call lplmax (usb,emax2,emin2,is)  ! ub/np1
+      emax = max(emax1,emax2)
+      emin = 0
+      call lplot1 (2,5,is,timeh,uss,emax,0.,ILN,nxtick,nytick,&
                    ' us*s   ',8,'        ',8,'        ',8,0)
+      call lplot1 (2,6,is,timeh,usb,emax,0.,ILN,nxtick,nytick,&
+                   ' us*b   ',8,' time   ',8,'        ',8,0)
 !
-      call lplmax (usb,emax,emin,is)
-      call lplot1 (3,5,is,timeh,usb,emax,emin,ILN,nxtick,nytick,&
-                   ' us*b   ',8,'        ',8,'        ',8,0)
+!
+      call lplmax (Bextx,emax1,emin1,is)
+      call lplmax (Bextz,emax2,emin2,is)
+      emax = max(emax1,emax2)
+      emin = 0
+      call lplot1 (3,4,is,timeh,Bextx,emax,0.,ILN,nxtick,nytick,&
+                   'Bextx.7 ',8,'        ',8,'        ',8,0)
+      call lplot1 (3,5,is,timeh,Bextz,emax,0.,ILN,nxtick,nytick,&
+                   'Bextz.7 ',8,'  time  ',8,'        ',8,0)
 !------------------------
       call chart
 !------------------------
 !
-      call lplmax (ds_Fe,emax,emin,is)
-      emax = amax1(emax,-emin)
+      call lplmax (ds_Fe,emax1,emin1,is)  ! =ds1/np1
+      call lplmax (ds_O, emax2,emin2,is)  ! =ds2/np2
+      emax = amax1(emax1,emax2)
       emin = -emax
-      call lplot1 (2,4,is,timeh,ds_Fe,emax,emin,ILN,nxtick,nytick,&
+      call lplot1 (2,4,is,timeh,ds_Fe,emax,0.,ILN,nxtick,nytick,&
                    ' ds_Fe  ',8,'        ',8,'        ',8,0)
-!
-      call lplmax (ds_O,emax,emin,is)
-      emax = amax1(emax,-emin)
-      emin = -emax
-      call lplot1 (2,5,is,timeh,ds_O,emax,emin,ILN,nxtick,nytick,&
+      call lplot1 (2,5,is,timeh,ds_O, emax,0.,ILN,nxtick,nytick,&
                    ' ds_O   ',8,'        ',8,'        ',8,0)
 !
-      call lplmax (U_O,emax,emin,is)
-      call lplot1 (3,4,is,timeh,U_O,emax,emin,ILN,nxtick,nytick,&
-                   ' Kin_O  ',8,'        ',8,'        ',8,0)
-!
-      call lplmax (U_Fe,emax,emin,is)
-      call lplot1 (3,5,is,timeh,U_Fe,emax,emin,ILN,nxtick,nytick,&
+      call lplmax (U_Fe,emax1,emin1,is)   ! U_Fe/np1
+      call lplmax (U_O, emax2,emin2,is)   ! U_O /np2
+      call lplot1 (3,4,is,timeh,U_Fe,emax,0.,ILN,nxtick,nytick,&
                    ' Kin_Fe ',8,'        ',8,'        ',8,0)
+      call lplot1 (3,5,is,timeh,U_O, emax,0.,ILN,nxtick,nytick,&
+                   ' Kin_O  ',8,'        ',8,'        ',8,0)
 !
       call lplmax (fdt4,emax,emin,is)
       call lplot1 (2,6,is,timeh,fdt4,emax,emin,ILN,nxtick,nytick,&
@@ -4119,7 +4118,7 @@
 !
       real(C_float) ct,tm(2)
       real(C_DOUBLE) cputime,walltime,walltime0
-      logical first_clk
+      logical  first_clk
       common/saveif2/ walltime0,first_clk
 !               - defined as .true. in /block data/
 !
