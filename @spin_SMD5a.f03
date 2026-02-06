@@ -135,11 +135,6 @@
 !*                                                               *
 !% mpiexec -n 5 a.out &                                          *
 !*****************************************************************
-!   if(rank.eq.0) then, call magnetiz in every step, L.1675
-!   open (unit=23,231a.xyz), L.1730, 2540.
-!   open (unit=77,231a.ps) Always in PS plots, L.255,1910,1975  
-!     note: (3A ) (3 B) (2B ), L.3740 - missing ) in PS plots
-!-----------------------------------------------------------------
 !
       program spin37
       use, intrinsic :: iso_c_binding
