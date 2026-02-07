@@ -16,9 +16,10 @@ Magnetic microwaves of giga-Hertz frequency, like 2.5 GHz
 
 Metropolis criterion is used to accept/reject in the MC steps
 
-Dissipation spin molecular dynamics simulation is executed in the MD step
+Dissipation spin molecular dynamics simulation is executed in the MD step.
+Microwave magnetic heating of magnetite over the Curie temperature. 
 
-  > Execution of a few 1,000,000 steps for $ Delta t= 0.001 $ ps
+  > Execution of a few 1,000,000 steps (1 GHz ranges) for $ Delta t= 0.001 $ ps
 
 
 ## Numerical Code, Parameters and Files
