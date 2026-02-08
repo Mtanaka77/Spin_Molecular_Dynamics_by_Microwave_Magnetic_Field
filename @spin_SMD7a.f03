@@ -2063,7 +2063,7 @@
         snt2= 2**(1.d0/6.d0)
         rLJ = r/(rintC(k,i)/snt2)   ! Minimum at rintC(k,i) for this pair
 !                *****
-        rsi = 1/dmax1(rLJ**2, 0.81d0)
+        rsi = 1/max(rLJ**2, 0.81d0)
         snt = rsi*rsi*rsi
 !
         e_LJ = e_LJ +fc2*(d/12.d0)*snt*(snt -1.d0)
@@ -3592,7 +3592,7 @@
       real(C_float)  ang1x(101),ang2x(101),ang1y(101),ang2y(101), &
                      ang1z(101),ang2z(101),angax(101),angay(101), &
                      angaz(101),hha(101),costhx,costhy,costhz,    &
-                     famax1,famin1,famax2,famin2,famax3,famin3,   &
+                     fmax,fmin,famax2,famin2,famax3,famin3,   &
                      famax,famin
 !
       do 100 k= 1,101
@@ -3649,15 +3649,15 @@
 !                                                                *
       ILN=  1
       ILG=  2
-      call lplmax (ang1x,famax1,famin1,101)
+      call lplmax (ang1x,fmax,fmin,101)
       call lplmax (ang2x,famax2,famin2,101)
-      famax= amax1(famax1,famax2)
-      famin= amin1(famin1,famin2)
+      famax= max(fmax,famax2)
+      famin= min(fmin,famin2)
 !
         OPEN (unit=11,file=praefixc//'.11'//suffix2, &
                 status='unknown',position='append',form='formatted')
 !
-        write(11,932) famax1,famax2,famin1,famin2
+        write(11,932) fmax,famax2,fmin,famin2
   932   format('max,min=',1p4e11.2)
 !
         close (11)
@@ -3671,9 +3671,9 @@
       call hplot1 (2,3,101,hha,ang2x,famax,famin,ILN,nxtick,nytick,&
                      '        ',8,'cos(thx)',8,' (2B )  ',8,0)
 !
-      call lplmax (ang1y,famax1,famin,101)
+      call lplmax (ang1y,fmax,famin,101)
       call lplmax (ang2y,famax2,famin,101)
-      famax= amax1(famax1,famax2)
+      famax= max(fmax,famax2)
       call hplot1 (3,2,101,hha,ang1y,famax,famin,ILN,nxtick,nytick,&
                      '        ',8,'cos(thy)',8,' (3 B)  ',8,0)
       call hplot1 (3,2,101,hha,angay,famax,famin,ILN,nxtick,nytick,&
@@ -3684,9 +3684,9 @@
       call chart
 !---------------------
 !
-      call lplmax (ang1z,famax1,famin,101)
+      call lplmax (ang1z,fmax,famin,101)
       call lplmax (ang2z,famax2,famin,101)
-      famax= amax1(famax1,famax2)
+      famax= max(fmax,famax2)
       call hplot1 (2,2,101,hha,ang1z,famax,famin,ILN,nxtick,nytick,&
                      '        ',8,'cos(thz)',8,' (3 B)  ',8,0)
       call hplot1 (2,2,101,hha,angaz,famax,famin,ILN,nxtick,nytick,&
@@ -3796,14 +3796,14 @@
       ns= ns +1
   200 continue
 !
-      mue_B= 9.27410e-21   ! e*hbar/2mc
-      B00= 100             ! gauss
+      mue_B= 9.27410d-21   ! e*hbar/2mc
+      B00= 100.d0          ! gauss
       Bmw= B00*sqrt(Bapx**2 +Bapy**2 +Bapz**2)
 !
       call lplmax (magx,emax1,emin1,is)
       call lplmax (magy,emax2,emin2,is)
       call lplmax (magz,emax3,emin3,is)
-      emax = amax1(emax1,emax2,emax3,-emin1,-emin2,-emin3)
+      emax = max(emax1,emax2,emax3,-emin1,-emin2,-emin3)
       emin = -emax
 !
       nxtick= 3
@@ -3818,70 +3818,55 @@
 !
       call lplmax (spinx,emax1,emin1,is)
       call lplmax (spinz,emax2,emin2,is)
-      emax = amax1(emax1,emax2,-emin1,-emin2)
+      emax = max(emax1,emax2,-emin1,-emin2)
       emin = -emax
       call lplot1 (3,4,is,timeh,spinx,emax,emin,ILN,nxtick,nytick,&
-                   'spin-x.7',8,'        ',8,'        ',8,0)
+                   'spin-x  ',8,'        ',8,'        ',8,0)
       call lplot1 (3,5,is,timeh,spinz,emax,emin,ILN,nxtick,nytick,&
-                   'spin-z.7',8,'        ',8,'        ',8,0)
+                   'spin-z  ',8,'        ',8,'        ',8,0)
 !
       call lplmax (spin7,emax,emin,is)
       emax= 1.2*emax
       call lplot1 (3,6,is,timeh,spin7,emax,0.,ILN,nxtick,nytick,&
-                   'spin-7  ',8,' time   ',8,'        ',8,0)
+                   '<spin>  ',8,' time   ',8,'        ',8,0)
 !------------------------
       call chart
 !------------------------
 !
       call lplmax (Usys,emax,emin,is)  ! Usys= (ub+um+U_O+U_Fe)/(np1+np2)
-      call lplot1 (2,4,is,timeh,Usys,emax,0.,ILN,nxtick,nytick,&
+      call lplot1 (2,4,is,timeh,Usys,emax,emin,ILN,nxtick,nytick,&
                    'Usys    ',8,'        ',8,'        ',8,0)
 !
       call lplmax (uss,emax1,emin1,is)  ! um/np1
       call lplmax (usb,emax2,emin2,is)  ! ub/np1
       emax = max(emax1,emax2)
-      emin = 0
-      call lplot1 (2,5,is,timeh,uss,emax,0.,ILN,nxtick,nytick,&
-                   ' us*s   ',8,'        ',8,'        ',8,0)
-      call lplot1 (2,6,is,timeh,usb,emax,0.,ILN,nxtick,nytick,&
-                   ' us*b   ',8,' time   ',8,'        ',8,0)
+      emin = min(emin1,emin2)
+      call lplot1 (2,5,is,timeh,uss,emax,emin,ILN,nxtick,nytick,&
+                   ' Uss    ',8,'        ',8,'        ',8,0)
+      call lplot1 (2,6,is,timeh,usb,emax,emin,ILN,nxtick,nytick,&
+                   ' Usb    ',8,' time   ',8,'        ',8,0)
 !
 !
       call lplmax (Bextx,emax1,emin1,is)
       call lplmax (Bextz,emax2,emin2,is)
       emax = max(emax1,emax2)
-      emin = 0
-      call lplot1 (3,4,is,timeh,Bextx,emax,0.,ILN,nxtick,nytick,&
-                   'Bextx.7 ',8,'        ',8,'        ',8,0)
-      call lplot1 (3,5,is,timeh,Bextz,emax,0.,ILN,nxtick,nytick,&
-                   'Bextz.7 ',8,'  time  ',8,'        ',8,0)
+      emin = min(emin1,emin2)
+      call lplot1 (3,4,is,timeh,Bextx,emax,emin,ILN,nxtick,nytick,&
+                   'Bextx   ',8,'        ',8,'        ',8,0)
+      call lplot1 (3,5,is,timeh,Bextz,emax,emin,ILN,nxtick,nytick,&
+                   'Bextz   ',8,'  time  ',8,'        ',8,0)
 !------------------------
       call chart
 !------------------------
 !
-      call lplmax (ds_Fe,emax1,emin1,is)  ! =ds1/np1
-      call lplmax (ds_O, emax2,emin2,is)  ! =ds2/np2
-      emax = amax1(emax1,emax2)
-      emin = -emax
-      call lplot1 (2,4,is,timeh,ds_Fe,emax,0.,ILN,nxtick,nytick,&
-                   ' ds_Fe  ',8,'        ',8,'        ',8,0)
-      call lplot1 (2,5,is,timeh,ds_O, emax,0.,ILN,nxtick,nytick,&
-                   ' ds_O   ',8,'        ',8,'        ',8,0)
-!
       call lplmax (U_Fe,emax1,emin1,is)   ! U_Fe/np1
       call lplmax (U_O, emax2,emin2,is)   ! U_O /np2
-      call lplot1 (3,4,is,timeh,U_Fe,emax,0.,ILN,nxtick,nytick,&
+      emax = max(emax1,emax2)
+      emin = min(emin1,emin2)
+      call lplot1 (2,4,is,timeh,U_Fe,emax,emin,ILN,nxtick,nytick,&
                    ' Kin_Fe ',8,'        ',8,'        ',8,0)
-      call lplot1 (3,5,is,timeh,U_O, emax,0.,ILN,nxtick,nytick,&
-                   ' Kin_O  ',8,'        ',8,'        ',8,0)
-!
-!     call lplmax (fdt4,emax,emin,is)
-!     call lplot1 (2,6,is,timeh,fdt4,emax,emin,ILN,nxtick,nytick,&
-!                  'f*dt/mvo',8,'  time  ',8,'        ',8,0)
-!
-!     call lplmax (vdt4,emax,emin,is)
-!     call lplot1 (3,6,is,timeh,vdt4,emax,emin,ILN,nxtick,nytick,&
-!                  ' v*dt   ',8,'  time  ',8,'        ',8,0)
+      call lplot1 (2,5,is,timeh,U_O, emax,emin,ILN,nxtick,nytick,&
+                   ' Kin_O  ',8,'  time  ',8,'        ',8,0)
 !------------------------
       call chart
 !------------------------
@@ -4074,8 +4059,8 @@
       fmin=  1.e10
 !
       do 100 i= 1,is
-      fmax= amax1(fmax,f(i))
-      fmin= amin1(fmin,f(i))
+      fmax= max(fmax,f(i))
+      fmin= min(fmin,f(i))
   100 continue
 !
       return
@@ -4384,15 +4369,15 @@
          ymin=  1.e10
 !
          do 50 i= 1,npt
-         ymax= amax1(ymax,v(i))
-         ymin= amin1(ymin,v(i))
+         ymax= max(ymax,v(i))
+         ymin= min(ymin,v(i))
    50    continue
 !
          if(ymin.ge.0.) then
            ymax= 1.1*ymax
            ymin= 0.
          else
-           ymax= amax1(0.,ymax)
+           ymax= max(0.,ymax)
            ymin= 1.1*ymin
          end if
       end if
@@ -4660,14 +4645,14 @@
       am4= 0.
 !
       do 100 ij= 1,npx*npy
-      am2= amax1(am2,abs(a(ij)))
+      am2= max(am2,abs(a(ij)))
   100 continue
 !
       do 200 ij= 1,npx*npz
-      am4= amax1(am4,abs(b(ij)))
+      am4= max(am4,abs(b(ij)))
   200 continue
 !
-      ams= amax1(am2,am4)
+      ams= max(am2,am4)
       if(ams.lt.1.e-10) ams=999.0
 !
       call symbol (zl,0.10,hh,'scalar.max=',0.,11)
@@ -4728,8 +4713,8 @@
 !
       do 320 jj= 1,4
       do 320 i= 1,mx
-      amax7= amax1(cut(i,jj),amax7)
-      amin7= amin1(cut(i,jj),amin7)
+      amax7= max(cut(i,jj),amax7)
+      amin7= min(cut(i,jj),amin7)
   320 continue
 !
       if(amax7.lt.0.) amax7= 0.
@@ -4826,8 +4811,8 @@
         umax1=-1.e+30
         umin1= 1.e+30
         do 20 i = 1 , nxy
-          umax1=amax1(umax1,u(i))
-          umin1=amin1(umin1,u(i))
+          umax1=max(umax1,u(i))
+          umin1=min(umin1,u(i))
    20   continue
         do 25 i = 1 , nxy
           w(i) = u(i) - umin1
@@ -5478,9 +5463,10 @@
 !
       xmax1= x(1)
       xmin1= x(1)
+!
       do 100 i=2,nx
-      xmax1= amax1(xmax1,x(i) )
-      xmin1= amin1(xmin1,x(i) )
+      xmax1= max(xmax1,x(i) )
+      xmin1= min(xmin1,x(i) )
   100 continue
 !
       return
