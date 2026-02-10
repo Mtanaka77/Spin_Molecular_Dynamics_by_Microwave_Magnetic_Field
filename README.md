@@ -22,8 +22,8 @@ Dissipation spin molecular dynamics simulation is executed in the MD cycle.
 
 Microwave magnetic heating by numerical simulation occurs in 1,500 K for magnetite,
 where T= 0 K initially. The peak of the time derivative dUsys/dt for Usys corresponds to 
-the Curie temperatre. The total energy Usys and the time derivative dUsys/dt are shown 
-as the proof of our theory, Ref. 2. 
+the Curie temperatre of 858 K. The total energy Usys and the time derivative dUsys/dt 
+are shown as the proof of our theory, Ref. 2. 
 
 ## Numerical Code, Parameters and Files
 
