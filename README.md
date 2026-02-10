@@ -21,9 +21,9 @@ Dissipation spin molecular dynamics simulation is executed in the MD cycle.
   > Execution of a few 1,000,000 steps (1 GHz ranges) for $ Delta t= 0.001 $ ps
 
 Microwave magnetic heating by numerical simulation occurs in 1,500 K for magnetite,
-where T= 0 K initially. The peak of the time derivative dU/dt corresponds to the 
-Curie temperatre. The total energy Usys and the time derivative dU/dt are shown 
-as the proof, Ref. 2. 
+where T= 0 K initially. The peak of the time derivative dUsys/dt for Usys corresponds to 
+the Curie temperatre. The total energy Usys and the time derivative dUsys/dt are shown 
+as the proof of our theory, Ref. 2. 
 
 ## Numerical Code, Parameters and Files
 
@@ -49,6 +49,6 @@ p3m resolution
 1. R. Roy, D. Agrawal, J. Cheng, and S. Gedevanishvili, Full sintering of powdered-metal bodies
 in a magnetic field, Nature, 399, 668 (1999).
 
-3. M. Tanaka, H. Kono, and K. Maruyama, Selective heating mechanism of magnetic
+2. M. Tanaka, H. Kono, and K. Maruyama, Selective heating mechanism of magnetic
 metal oxides by a microwave magnetic field, Phys. Rev. B, 79, 104420 (2009).
 
