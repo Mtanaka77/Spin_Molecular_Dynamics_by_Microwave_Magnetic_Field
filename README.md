@@ -20,8 +20,8 @@ Dissipation spin molecular dynamics simulation is executed in the MD cycle.
 
   > Execution of a few 1,000,000 steps (1 GHz ranges) for $ Delta t= 0.001 $ ps
 
-Microwave magnetic heating by numerical simulation reaches 1,500 K for metal oxide magnetite,
-with T= 0 K initially. The peak of the time derivative dU_sys/dt for Usys corresponds to 
+Microwave magnetic heating by numerical simulation reaches 1,500 K for metal oxide magnetite.
+The peak of the time derivative dU_sys/dt for Usys corresponds to 
 the Curie temperatre of 858 K. The total energy U_sys and the time derivative dU_sys/dt 
 are shown as the proof of our theory, Ref. 2. 
 
