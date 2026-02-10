@@ -20,9 +20,10 @@ Dissipation spin molecular dynamics simulation is executed in the MD cycle.
 
   > Execution of a few 1,000,000 steps (1 GHz ranges) for $ Delta t= 0.001 $ ps
 
-Microwave magnetic heating by simulation occurs in 1,300 K for magnetite,
-where T= 0 K initially. This is above the Curie temperature (the Usys plot, 
-page 19 of this directory, is shown as the proof). 
+Microwave magnetic heating by numerical simulation occurs in 1,500 K for magnetite,
+where T= 0 K initially. The peak of the time derivative dU/dt corresponds to the 
+Curie temperatre. The total energy Usys and the time derivative dU/dt are shown 
+as the proof, Ref. 2. 
 
 ## Numerical Code, Parameters and Files
 
