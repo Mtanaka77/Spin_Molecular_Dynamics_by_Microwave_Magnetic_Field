@@ -8,7 +8,7 @@ Theory identifying unpaired 3d electron spins of Fe(3+) and Fe(2+) to increase
 much above the Curie temperature (M. Tanaka et al., Phys. Rev. B, 2009), Ref.2.  
 
 
-## Simulation Procedure
+## Simulation Procedures and Our Theory
 
 Electron spins of Fe(3+), Fe(2+) and O(2-) in cubic cells
 
@@ -21,9 +21,8 @@ Dissipation spin molecular dynamics simulation is executed in the MD cycle.
   > Execution of a few 1,000,000 steps (1 GHz ranges) for $ Delta t= 0.001 $ ps
 
 Microwave magnetic heating by numerical simulation reaches 1,500 K for metal oxide magnetite.
-The peak of the time derivative dU_sys/dt for Usys corresponds to 
-the Curie temperatre of 858 K. The total energy U_sys and the time derivative dU_sys/dt 
-are shown as the proof of our theory, Ref. 2. 
+The peak of the time derivative dU_sys/dt for Usys corresponds to the Curie temperatre of 858 K. 
+The total energy U_sys and the time derivative dU_sys/dt are shown as the proof of our theory, Ref. 2. 
 
 ## Numerical Code, Parameters and Files
 
