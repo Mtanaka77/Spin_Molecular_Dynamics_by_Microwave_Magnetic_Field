@@ -26,16 +26,16 @@ The total energy U_sys and the time derivative dU_sys/dt are shown as the proof 
 
 ## Numerical Code, Parameters and Files
 
-1) @spin_SMD11a.f03: Dissipative spin molecular dynamics. An odd number of processors
+1) @spin_SMD5a.f03: Dissipative spin molecular dynamics. An odd number of processors
 in the z direction is required for your choice. Read the simulation code and parameters
 for details !!
 
-3) param_spinRL11.h: Parameters 
+3) param_spinRL5.h: Parameters 
 
  > number of processors (nodes), total cells of irons and oxygens (odd numbers),
 p3m resolution
   
-3) SAI111_config.START1: Configuration file
+3) SAI105_config.START1: Configuration file
 
  > physical run time, lattice sizes, number of cells, exchange integrals for Fe and O,
   period of microwave magnetic field, temperature, Curie temprature, etc.
