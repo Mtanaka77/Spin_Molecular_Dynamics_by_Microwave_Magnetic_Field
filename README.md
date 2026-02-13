@@ -2,6 +2,9 @@
 
 ## Sintering Experiments and Theory
 
+We can place microwave magnetic field to heat metal oxide of magnetite at 
+1,300 Celsius, which is above the Curie temperatre 585 Celsius.
+
 Microwave sintering by initial experiments (R. Roy et. al., Nature, 1999), Ref.1.  
 
 Theory identifying unpaired 3d electron spins of Fe(3+) and Fe(2+) to increase 
