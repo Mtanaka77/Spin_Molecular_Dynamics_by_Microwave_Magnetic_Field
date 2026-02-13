@@ -7,9 +7,9 @@ We can place microwave magnetic field to heat metal oxide of magnetite at
 Microwave sintering was tested by experiments and good quarity irons were created 
 (R. Roy et. al., Nature, 1999), Ref.1.  
 
-Theory was used in identify unpaired 3d electron spins of Fe(3+) and Fe(2+) irons
-to increase much above the Curie temperature (M. Tanaka et al., Phys. Rev. B, 
-2009), Ref.2.  
+Later, theory and numerical simulation were used in identifying unpaired 3d 
+electron spins of Fe(3+) and Fe(2+) irons to increase much above the Curie 
+temperature (M. Tanaka et al., Phys. Rev. B, 2009), Ref.2.  
 
 ## Simulation Procedures and Our Theory
 
