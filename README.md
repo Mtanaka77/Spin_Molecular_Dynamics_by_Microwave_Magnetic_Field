@@ -41,7 +41,8 @@ p3m resolution
   period of microwave magnetic field, temperature, Curie temprature, etc.
   About 1,000,000 steps are required !
 
-4) Magnetite in a cubic lattice: magnetite8.xyz for initialization
+4) Magnetite in a cubic lattice: magnetite8.xyz for initialization of 
+the a,b,c cell
 
 ## References
 
