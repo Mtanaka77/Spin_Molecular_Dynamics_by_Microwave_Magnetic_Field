@@ -35,7 +35,7 @@ for details !!
 
 3) param_spinRL5.h: Parameters 
 
- > number of processors (nodes), total cells of irons and oxygens (odd numbers),
+ > number of processors (nodes), total cells of irons and oxygens (odd numbers such as 5x5x5 nodes),
 p3m resolution
   
 3) SAI105_config.START1: Configuration file
