@@ -320,7 +320,7 @@
                  cnt_recvC(0:num_proc),disp_recvC(0:num_proc), &
                  cnt_send,ierror,mpierror,i_MC,ifcmp,kk
 !
-      real(C_DOUBLE) e_sp0,e_c_r0,e_LJ0
+      real(C_DOUBLE) e_sp0,e_c_r0,e_LJ0,t8_start
       logical  if_LJ0
 !
       real(C_DOUBLE) x,y,z,spx,spy,spz,ch,fx,fy,fz,fxC,fyC,fzC, &
@@ -348,7 +348,7 @@
                  n_of_j,np10,np100,ia,ja,ka,i1x,i2x,i1y,i2y,i1z,i2z, &
                  n_MCsteps,nt_p3m
 !
-      real(C_DOUBLE) t8,dt,dts,dt0,dth,Bex,Bey,Bez,spin2,spin3, &
+      real(C_DOUBLE) t8,dt,dt0,dth,Bex,Bey,Bez,spin2,spin3,     &
                  Jaa,Jbb,Jab,J00,B00,Bapx,Bapy,Bapz,Bap,Bstat,  &
                  tau_b,tau_diss,t_adv,fw,fw00,                  &
                  Temp,TCurie,g,mue_B,hbar,KJoule,Kcal,mol,kT,eV,&
@@ -364,7 +364,6 @@
                  svx,svy,svz,sqrt2,vmax1,dgaus2,vsq1,vsq2,      &
                  vx1,vy1,vz1,mas,e_sp,e_c_r,e_LJ,e_Coulomb_p3m
 !
-      real(C_DOUBLE) x0(np0),y0(np0),z0(np0),vx0(np0),vy0(np0),vz0(np0)
       real(C_DOUBLE) x_0(np0),y_0(np0),z_0(np0)
       real(C_DOUBLE) dtwr,dtwr2,cputime
 !
@@ -398,7 +397,7 @@
       real(C_DOUBLE) wx,wy,wz,wn,wsx,wsy,wsz,wp, &
                     wx1,wy1,wz1,wn1,uav,wt1,wx7,wy7,wz7,wn7,uav7,wt7,  &
                     ssx,ssy,ssz,tht,phi,psi,bbw,tsz0,atsz,av_tsz(nhs), &
-                    ub,um,ub1,um1,uu1(3),uu2(3),ranff,ds1,ds2
+                    ub,um,ub1,um1,uu1(7),uu2(7),ranff,ds1,ds2
       common/ehist/ spinx(nhs),spinz(nhs),spin7(nhs),                   &
                     Bextx(nhs),Bextz(nhs),magx(nhs),magy(nhs),magz(nhs),&
                     Usys(nhs),conv(nhs),aitr(nhs),psdt(nhs),tfix(nhs),  &
@@ -1106,8 +1105,9 @@
 !  kstart= 1
 !  +++++++++
         if(it.eq.1) then
-          call magnetiz (spx,spy,spz,g,wx7,wy7,wz7,wn7,u1,uav7,wt7,np1,-1)
-!                                              +++                    +-1
+          call magnetiz (spx,spy,spz,g,wx7,wy7,wz7,wn7,u1,uav7,wt7,   &
+                                                          rank,i1,i2,0)
+!                                              +++               Reset
 !* Sign of magnetic field is defined here
 !
           if(wz7.gt.0) then
@@ -1127,9 +1127,10 @@
 !
  2000 i_MC= 0  !<-- kstart= 0
 !
-      Bex= 0
-      Bey= 0
-      Bez= 0
+      fw= 0
+      bex= Bapx*fw
+      bey= Bapy*fw
+      bez= Bapz*fw +Bstat*fw00
 !
       u= 1.d10
       iac1= 0
@@ -1162,9 +1163,9 @@
         do 210 l= 1,np10
         if(l.eq.i) go to 210
 !
-        xx= x(i)-x(l)
-        yy= y(i)-y(l)
-        zz= z(i)-z(l)
+        xx= x(i) -x(l)
+        yy= y(i) -y(l)
+        zz= z(i) -z(l)
 !                            **       + Small system
         xx= xx -nint(xx/xleng0)*xleng0
         yy= yy -nint(yy/yleng0)*yleng0
@@ -1223,29 +1224,26 @@
         end if
       end if
 !                          
-
-      if(rank.eq.0) then  !                                          Add
-        call magnetiz (spx00,spy00,spz00,g,wx7,wy7,wz7,wn7,u1,uav7,wt7,np100,1)
-!                                                                      +++++ 1
-        if(mod(i_MC,kwrite).eq.1) then  !                              Average                
-          call magnetiz (spx00,spy00,spz00,g,wx7,wy7,wz7,wn7,u1,uav7,wt7,np100,7)
+!                                                                         Add
+      call magnetiz7 (spx00,spy00,spz00,g,wx7,wy7,wz7,wn7,u1,uav7,wt7,np100,1)
+! 
+      if(mod(i_MC,kwrite).eq.1) then  !                                 Average                
+        call magnetiz7 (spx00,spy00,spz00,g,wx7,wy7,wz7,wn7,u1,uav7,wt7,np100,7)
 !                                                                        +++++ 7
-          bbw= B00*Bez
+        bbw= B00*Bez
 !
-          if(rank.eq.0) then
-            open (unit=11,file=praefixc//'.11'//suffix2, &
+        if(rank.eq.0) then
+          open (unit=11,file=praefixc//'.11'//suffix2, &
                     status='unknown',position='append',form='formatted')
 !
-            write(11,201) i_MC,iac1,iac2,irej,u/np100,u1/np100, &
-                          bbw,wx7,wy7,wz7     !    +++      +++
-  201       format(' i_MC,iac1,iac2,irej=',i7,3i7,' <u>,<u1>=', &
-                    1p2d11.3,' bz=',d9.2,' <m>=',0p3f6.2)
-            close (11)
-          end if
-!                                                                      Reset
-          call magnetiz (spx00,spy00,spz00,g,wx7,wy7,wz7,wn7,u1,uav7,wt7,np100,0)
-!                                                                        +++++ 0
+          write(11,201) i_MC,iac1,iac2,irej,u/np100,u1/np100, &
+                        bbw,wx7,wy7,wz7     !    +++      +++
+  201     format(' i_MC,iac1,iac2,irej=',i7,3i7,' <u>,<u1>=', &
+                 1p2d11.3,' bz=',d9.2,' <m>=',0p3f6.2)
+          close (11)
         end if
+!                                                                         Reset
+        call magnetiz7 (spx00,spy00,spz00,g,wx7,wy7,wz7,wn7,u1,uav7,wt7,np100,0)
       end if
 !                <- 2300: 114 lines above          
       if(i_MC.lt.nstep_MC) go to 2300
@@ -1330,10 +1328,18 @@
 !              !<-- ksrart= 1
  3000 continue
 !                                           *****
-      fw= fw00*(1.d0 -exp(-t8/tau_b)) * sin(omg_b*t8)  ! -m*b < 0
-      Bex= Bapx*fw  ! Bapx * sin(omg_b*t)
-      Bey= Bapy*fw
-      Bez= Bapz*fw
+      fw= fw00*(1.d0-exp(-(t8-t8_start)/tau_b)) &
+                                * sin(omg_b*(t8-t8_start))  ! -M*B < 0
+      bex= Bapx*fw
+      bey= Bapy*fw
+      bez= Bapz*fw +Bstat*fw00
+!                        +++++   ! choose the direction properly
+!------------------------
+!* Data transfer here!!
+!------------------------
+!* Local exchange of minimum data
+!
+      i00= i1(rank) -1
 !
       iter= 0
   400 iter= iter +1
@@ -1360,9 +1366,9 @@
 !
 !* Fold back - corrected 11/23/2010
 !
-      xx= x(i) - x(j)
-      yy= y(i) - y(j)
-      zz= z(i) - z(j)
+      xx= x(i) -x(j)
+      yy= y(i) -y(j)
+      zz= z(i) -z(j)
       xx= xx -nint(xx/xleng)*xleng
       yy= yy -nint(yy/yleng)*yleng
       zz= zz -nint(zz/zleng)*zleng
@@ -1388,8 +1394,8 @@
       hh2= dth/tau_diss
       rsx= spx(i) +dth*(spy(i)*qsz -spz(i)*qsy) 
       rsy= spy(i) +dth*(spz(i)*qsx -spx(i)*qsz) 
-      rsz= spz(i) +dth*(spx(i)*qsy -spy(i)*qsx) &
-                            -hh2*(spz(i) -2.d0*aspz(i))
+      rsz= spz(i) +dth*(spx(i)*qsy -spy(i)*qsx)
+!                           -hh2*(spz(i) -2.d0*aspz(i))  !<--???
 !
 ! RHS_para
       qq  = qsx**2 +qsy**2 +qsz**2
@@ -1407,6 +1413,8 @@
 !-------------------------------
 !
       alp= 0.7d0
+!     alp= dmin1(0.90d0, 0.50d0 +0.05d0*(iter-1))  ! <- ???
+!
       spx1(i)= alp*spx1(i) +(1.d0 -alp)*spx0(i)
       spy1(i)= alp*spy1(i) +(1.d0 -alp)*spy0(i)
       spz1(i)= alp*spz1(i) +(1.d0 -alp)*spz0(i)
@@ -1477,24 +1485,15 @@
 ! ---------------------------------------------------------------
 !    Mass unit: m_unit is included in fc1, fc2
 ! ---------------------------------------------------------------
-!* Use a sub-time mesh, such that  v*dts < 1
-!
-      do i= 1,np1+np2
-      x0(i)= x(i)     !<- x0(i) these 43 lines below, x(i)
-      y0(i)= y(i)
-      z0(i)= z(i)
-!
-      vx0(i)= vx(i)   !<-- vx(i)
-      vy0(i)= vy(i)
-      vz0(i)= vz(i)
-      end do
-!
 !  p3m - Slow change 
 !
       if(mod(it,nt_p3m).eq.1) then
         call p3m_perform (x,y,z,ch,fkx,fky,fkz,np1+np2,iwrt1, &
                           rank,e_Coulomb_p3m)
       end if
+!
+!% mpif90 -mcmodel=medium -fpic -O2 -o ax.out @spin_SMD5a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
+!% mpiexec -n 5 ax.out &                                         *
 !
       call forces (fc1,fc2,fcLJ,alpha,e_sp,e_c_r,e_LJ, &
                    i1,i2,i3,i4,rank,np1,np2,it)
@@ -1559,13 +1558,13 @@
 !* Full forces should be used from t=0 to avoid atom thermal diffusion
 !
       do i= 1,np1+np2
-      vx(i)= vx(i) +dts*(fx(i) +fxC(i) +fkx(i))/mass(i)
-      vy(i)= vy(i) +dts*(fy(i) +fyC(i) +fky(i))/mass(i)
-      vz(i)= vz(i) +dts*(fz(i) +fzC(i) +fkz(i))/mass(i)
+      vx(i)= vx(i) +dt*(fx(i) +fxC(i) +fkx(i))/mass(i)
+      vy(i)= vy(i) +dt*(fy(i) +fyC(i) +fky(i))/mass(i)
+      vz(i)= vz(i) +dt*(fz(i) +fzC(i) +fkz(i))/mass(i)
 !
-      x(i)= x(i) +dts*vx(i) !<- x(i)
-      y(i)= y(i) +dts*vy(i)
-      z(i)= z(i) +dts*vz(i)
+      x(i)= x(i) +dt*vx(i) 
+      y(i)= y(i) +dt*vy(i)
+      z(i)= z(i) +dt*vz(i)
       end do
 !
 ! -----------------------------------------------
@@ -1583,9 +1582,9 @@
       j= lintS(k,i)
 !
 !* Fold back
-      xx= x(i) - x(j)
-      yy= y(i) - y(j)
-      zz= z(i) - z(j)
+      xx= x(i) -x(j)
+      yy= y(i) -y(j)
+      zz= z(i) -z(j)
       xx= xx -nint(xx/xleng)*xleng
       yy= yy -nint(yy/yleng)*yleng
       zz= zz -nint(zz/zleng)*zleng
@@ -1597,6 +1596,11 @@
       end do
       end do
 !
+!* Energy absorption due to phase lag: 
+!       - <m(t)*b(t)/b_0> = - integral m*b/b_0 dt /t 
+!  Accumulate in every step                                      Add
+      call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,     &
+                                                       rank,i1,i2,1)
       uu1(1)= ub1
       uu1(2)= um1
       uu1(3)= 0
@@ -1606,19 +1610,19 @@
       um= uu2(2)
       u1= ub + um
 !
+!     if(rank.eq.0) then
+!     open (unit=11,file=praefixc//'.11'//suffix2, &
+!                 status='unknown',position='append',form='formatted')
+!     write(11,*) 't8=',t8,e_sp,e_c_r,e_LJ 
+!     close(11)
+!     end if
 !
 !******************************************************************
 ! ---- Diagnosis ----------------- On the major node ------------ *
 !******************************************************************
 !
       if(rank.eq.0) then
-!
-!* Accumulate in every step                                     Add
-      call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,np1,1)
-!                                                                +1
-!* Energy absorption due to phase lag: 
-!       - <m(t)*b(t)/b_0> = - integral m*b/b_0 dt /t 
-!
+!***
       if(iwrt1.eq.0) then
 !*
         open (unit=11,file=praefixc//'.11'//suffix2, &
@@ -1666,7 +1670,6 @@
         open (unit=23,file=praefixc//suffix2//'.xyz', &
                   status='unknown',position='append',form='formatted')
 !                                            ++++++
-!
         write(23,'(i6)') np1+np2
         write(23,'(a30)') 'All atoms in the entire system'
 !
@@ -1701,13 +1704,43 @@
 !
         Bextx(is)= B00*Bex
         Bextz(is)= B00*Bez
-!                                                   ic= 7: Get average
-        call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,np1,7)
+      end if
+      end if
+!                                                    ic= 7: average
+      call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,     &
+                                                       rank,i1,i2,7)
+!
+      uu1(1)= wx1
+      uu1(2)= wy1
+      uu1(3)= wz1
+      uu1(4)= wn1
+      uu1(5)= wt1
+      uu1(6)= u1
+      uu1(7)= uav
+!
+      call mpi_allreduce (uu1,uu2,7,mpi_real8,mpi_sum,mpi_comm_world, &
+                          mpierror)
+!
+      wx1= uu2(1)
+      wy1= uu2(2)
+      wz1= uu2(3)
+      wn1= uu2(4)
+      wt1= uu2(5)
+      u1 = uu2(6)
+      uav= uu2(7)
+!
+      wx1= -g*wx1/wn1  ! in mue_B unit
+      wy1= -g*wy1/wn1  !  -g*<spx>
+      wz1= -g*wz1/wn1
+      u1 =   u1  /wt1  !  <uav>
+!
 !                                                                  +7
+      if(rank.eq.0) then
+!***
+      if(iwrt1.eq.0) then
         magx(is)= wx1  ! m= -g*mue_B*s
         magy(is)= wy1  ! u= -m dot b = g*mue_B s*b 
         magz(is)= wz1
-!
 !
         U_Fe(is)= 0
         U_O(is) = 0
@@ -1738,6 +1771,7 @@
         uss(is) =  um/np1
         usb(is) =  ub/np1
 !
+      if(.false.) then
         if(if_LJ0) then
           if_LJ0= .false.
 !
@@ -1750,6 +1784,7 @@
         e_sp = (e_sp  -e_sp0 )/(np1+np2)
         e_c_r= (e_c_r -e_c_r0)/(np1+np2)
         e_LJ = (e_LJ  -e_LJ0 )/(np1+np2)
+      end if
 !
         t4 = t8
         Bex4= B00*Bex
@@ -1824,7 +1859,7 @@
 !            12123456712345678123451234123456789012345678901234567890
             '  conv      e_sp      e_c_r     e_LJ',&
 !            12345678901234567890123456789012345678901234567890123456
-            '      magz      deV_x(Fe) deV_x(O) cpu(min)')
+            '      magz      ds0_Fe    ds0_O    cpu(min)')
 !            789012345678901234567890123456789012345678
           write(11,*)
         end if
@@ -1833,13 +1868,16 @@
                  e_sp,e_c_r,e_LJ,magz(is),ds_Fe(is),ds_O(is),wtime/60.d0
   771   format('t=',f7.1,i8,i5,i4,1p7d10.2,0pf10.5,1p2d10.2,0pf8.2)
 !
-!                                                   ic= 0: Reset wx-wn
-        call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,np1,0)
-!                                                                  +0
         close (11)
       end if
+      end if
 !
+!                                               ic= 0: Reset wx-wn
+      call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,    &
+                                                      rank,i1,i2,0)
 !
+      if(rank.eq.0) then
+!***
       if(iwrt2.eq.0) then
         open (unit=77,file=praefixc//'.77'//suffix2//'.ps', &
                     status='unknown',position='append',form='formatted')
@@ -1875,15 +1913,14 @@
 !
         close(12)
       end if
-!
-      close (11)
+!     close (11)
       end if
 !
 !******************************************************************
 ! ---- Diagnosis Ended ------------- On the major node ---------- *
 !******************************************************************
 !
-        if(istop.eq.1) go to 7000
+!       if(istop.eq.1) go to 7000
       go to 1000
 ! ************* End of the Loop ***********************************
 !
@@ -1957,7 +1994,7 @@
       pi= 4.d0*atan(1.d0)
       sqrtpi= sqrt(pi)
 !
-      do i= 1,np1+np2
+      do i= i1(rank),i2(rank)
       fx(i)= 0   ! note: not defined for i > np1
       fy(i)= 0
       fz(i)= 0
@@ -2044,7 +2081,7 @@
       go to 600
 !
   400 continue
-      if(.true.) go to 300  !<-- ??
+!     if(.true.) go to 300  !<-- ??
 !     +++++++++ 
 !
       if(spec(i).eq.1 .or. spec(j).eq.1) then
@@ -2150,7 +2187,6 @@
       call mpi_bcast ( np10,  1,mpi_integer,  0,mpi_comm_world,ierror)
       call mpi_bcast (text1,173,mpi_character,0,mpi_comm_world,ierror)
 !
-!% mpif90 -mcmodel=medium -fpic -O2 -o a.out @spin_SMD5f.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
         if(rank.eq.0) then
           open (unit=11,file=praefixc//'.11'//suffix2, &
                     status='unknown',position='append',form='formatted')
@@ -3115,16 +3151,17 @@
        end
 !
 !
-!--------------------------------------------------------------------
-      subroutine magnetiz (spx,spy,spz,g,wx,wy,wz,wn,u,uav,wt,np,ic)
-!----------------------------------------------------*-***-------**--
+!----------------------------------------------------------------------
+      subroutine magnetiz7 (spx,spy,spz,g,wx,wy,wz,wn,u1,uav,wt,np,ic)
+!-----------------------------------------------------**-***-------**--
 !  Magnetization
 !
       use, intrinsic :: iso_c_binding
       implicit  none
       include  'param-spinRL5.h'
 !
-      real(C_DOUBLE) spx(np0),spy(np0),spz(np0),g,wx,wy,wz,wn,u,uav,wt
+      real(C_DOUBLE) spx(np0),spy(np0),spz(np0),g,wx,wy,wz,wn, &
+                     u1,uav,wt
       integer(C_INT) np,ic,i
 !
 ! ic< 0: Reset and get instantaneous values
@@ -3140,7 +3177,7 @@
 !
         uav= 0
         wt = 0
-        if(ic.eq.0) return
+        return
       end if
 !
       do 100 i= 1,np
@@ -3150,15 +3187,59 @@
       wn= wn +1
   100 continue
 !
-      uav= uav +u      ! System total energy (not per atom)
+      uav= uav +u1     ! System total energy (not per atom)
       wt = wt +1
 !
-      if(ic.lt.0 .or. ic.eq.7) then
-        wx= -g*wx/wn   ! in mue_B unit
-        wy= -g*wy/wn   !  -g*<spx>
-        wz= -g*wz/wn
-        uav= uav/wt    !  <uav>
+      if(ic.eq.7) then
+        wx = -g*wx/wn  ! in mue_B unit
+        wy = -g*wy/wn  !  -g*<spx>
+        wz = -g*wz/wn
+        u1 =   u1 /wt  !  <uav>
       end if
+!
+      return
+      end subroutine magnetiz7 
+!
+!
+!----------------------------------------------------*-***------------
+      subroutine magnetiz (spx,spy,spz,g,wx,wy,wz,wn,u,uav,wt,      &
+                                                       rank,i1,i2,ic)
+!---------------------------------------------------------------------
+!  Magnetization
+!
+      use, intrinsic :: iso_c_binding
+      implicit  none
+      include  'param-spinRL5.h'
+!
+      real(C_DOUBLE) spx(np0),spy(np0),spz(np0),g,wx,wy,wz,wn, &
+                     u,uav,wt
+      integer(C_INT) ic,i,rank,i1(0:num_proc),i2(0:num_proc)
+!
+! ic< 0: Reset and get instantaneous values
+! ic= 0: Reset
+! ic= 7: Get averaged value
+!   one cycle must be ic= 1 -> 7 -> 0
+!
+      if(ic.le.0) then
+        wx= 0
+        wy= 0
+        wz= 0
+        wn= 0
+!
+        uav= 0
+        wt = 0
+        return
+      end if
+!
+      do 100 i= i1(rank),i2(rank)
+      wx= wx +spx(i)
+      wy= wy +spy(i)
+      wz= wz +spz(i)
+      wn= wn +1
+  100 continue
+!
+      uav= uav +u      ! System total energy (not per atom)
+      wt = wt +1
 !
       return
       end subroutine magnetiz 
@@ -3852,14 +3933,13 @@
       call lplot1 (2,6,is,timeh,usb,emax,emin,ILN,nxtick,nytick,&
                    ' us*b   ',8,' time   ',8,'        ',8,0)
 !
-!
       call lplmax (Bextx,emax1,emin1,is)
       call lplmax (Bextz,emax2,emin2,is)
       emax = max(emax1,emax2)
       emin = 0
-      call lplot1 (3,4,is,timeh,Bextx,emax,emin,ILN,nxtick,nytick,&
+      call lplot1 (3,4,is,timeh,Bextx,emax1,emin1,ILN,nxtick,nytick,&
                    'Bextx.7 ',8,'        ',8,'        ',8,0)
-      call lplot1 (3,5,is,timeh,Bextz,emax,emin,ILN,nxtick,nytick,&
+      call lplot1 (3,5,is,timeh,Bextz,emax2,emin2,ILN,nxtick,nytick,&
                    'Bextz.7 ',8,'  time  ',8,'        ',8,0)
 !------------------------
       call chart
@@ -3876,9 +3956,9 @@
 !
       call lplmax (U_Fe,emax1,emin1,is)   ! U_Fe/np1
       call lplmax (U_O, emax2,emin2,is)   ! U_O /np2
-      call lplot1 (3,4,is,timeh,U_Fe,emax,0.,ILN,nxtick,nytick,&
+      call lplot1 (3,4,is,timeh,U_Fe,emax1,emin1,ILN,nxtick,nytick,&
                    ' Kin_Fe ',8,'        ',8,'        ',8,0)
-      call lplot1 (3,5,is,timeh,U_O, emax,0.,ILN,nxtick,nytick,&
+      call lplot1 (3,5,is,timeh,U_O, emax2,emin2,ILN,nxtick,nytick,&
                    ' Kin_O  ',8,'        ',8,'        ',8,0)
 !------------------------
       call chart
