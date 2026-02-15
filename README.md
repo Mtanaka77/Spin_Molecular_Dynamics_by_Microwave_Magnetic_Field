@@ -25,7 +25,7 @@ Dissipation spin molecular dynamics simulation is executed in the MD cycle.
 
 Microwave magnetic heating by numerical simulation reaches 1,300 Celsius for metal oxide magnetite.
 The peak of the time derivative dU_sys/dt corresponds to the Curie temperatre of 858 K (585 C) 
-with the sinusoidal magnetic field of 5,000 gauss, constant magnetic field B_z0= 10^4 gauss, 
+with the sinusoidal magnetic field Bz= 5,000 gauss, the constant magnetic field B_z0= 10^4 gauss, 
 and the initial temperture 200 K. 
 The total energy U_sys and the time derivative dU_sys/dt are shown as the proof of our theory of sintering, Ref. 2. 
 
