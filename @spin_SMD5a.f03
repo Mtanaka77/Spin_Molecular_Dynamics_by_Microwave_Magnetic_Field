@@ -1379,7 +1379,8 @@
       qsx= qsx +f1*J_ki*(spx1(j) +spx(j))
       qsy= qsy +f1*J_ki*(spy1(j) +spy(j))
       qsz= qsz +f1*J_ki*(spz1(j) +spz(j))
-  320 continue !   f1*J_ki * (s_1 +s)
+  320 continue 
+!               f1= J00 *t_unit/hbar  J00= 10 meV
 !
 !*********************************************************
 !* Equation: ds_i/dt= s_i*qq/hbar -(s_i-s_i0)/tau,       *
@@ -1392,11 +1393,13 @@
 !
 !* RHS
       hh2= dth/tau_diss
-      rsx= spx(i) +dth*(spy(i)*qsz -spz(i)*qsy) 
-      rsy= spy(i) +dth*(spz(i)*qsx -spx(i)*qsz) 
-      rsz= spz(i) +dth*(spx(i)*qsy -spy(i)*qsx)
-!                           -hh2*(spz(i) -2.d0*aspz(i))  !<--???
-!
+      rsx= spx(i) +dth*(spy(i)*qsz -spz(i)*qsy)       &
+                            -hh2*(spx(i) -2.d0*aspx(i)) 
+      rsy= spy(i) +dth*(spz(i)*qsx -spx(i)*qsz)       &
+                            -hh2*(spy(i) -2.d0*aspy(i)) 
+      rsz= spz(i) +dth*(spx(i)*qsy -spy(i)*qsx)       &
+                            -hh2*(spz(i) -2.d0*aspz(i)) 
+!                        -dt*(spz/2 -spz_0)/tau_diss
 ! RHS_para
       qq  = qsx**2 +qsy**2 +qsz**2
       rqq = (rsx*qsx +rsy*qsy +rsz*qsz)/qq
@@ -1454,14 +1457,14 @@
       ss= ((spx1(i) -spx0(i))**2 +(spy1(i) -spy0(i))**2  &
                                  +(spz1(i) -spz0(i))**2) &
                  /(spx0(i)**2 +spy0(i)**2 +spz0(i)**2)
-      smax= dmax1(ss,smax)
+      smax= max(ss,smax)
       sav = sav +ss
 !
       if(abs(ss).gt.toler) then
         notconv= notconv +1
       end if
   390 continue
-!                                 <- Return to 116 lines above
+!                                 <- Return to 120 lines above
       if(notconv.ne.0 .and. iter.lt.itermax) go to 400  !!<<-- 
 !     ------------------------------------------------
 !
@@ -1491,9 +1494,6 @@
         call p3m_perform (x,y,z,ch,fkx,fky,fkz,np1+np2,iwrt1, &
                           rank,e_Coulomb_p3m)
       end if
-!
-!% mpif90 -mcmodel=medium -fpic -O2 -o ax.out @spin_SMD5a.f03 -I/opt/fftw3/include -L/opt/fftw3/lib -lfftw3 &> log
-!% mpiexec -n 5 ax.out &                                         *
 !
       call forces (fc1,fc2,fcLJ,alpha,e_sp,e_c_r,e_LJ, &
                    i1,i2,i3,i4,rank,np1,np2,it)
@@ -1610,12 +1610,6 @@
       um= uu2(2)
       u1= ub + um
 !
-!     if(rank.eq.0) then
-!     open (unit=11,file=praefixc//'.11'//suffix2, &
-!                 status='unknown',position='append',form='formatted')
-!     write(11,*) 't8=',t8,e_sp,e_c_r,e_LJ 
-!     close(11)
-!     end if
 !
 !******************************************************************
 ! ---- Diagnosis ----------------- On the major node ------------ *
@@ -1706,7 +1700,8 @@
         Bextz(is)= B00*Bez
       end if
       end if
-!                                                    ic= 7: average
+!
+!  All nodes                                          ic= 7: average
       call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,     &
                                                        rank,i1,i2,7)
 !
@@ -1747,6 +1742,7 @@
         ds1= 0
         ds2= 0
 !
+!    fc3  = m_unit*(a_unit/t_unit)**2    ! For kinetic energy
         do i= 1,np1
         U_Fe(is)= U_Fe(is) +0.5d0*fc3*m_Fe*(vx(i)**2 +vy(i)**2 +vz(i)**2)
         ds1     = ds1 +sqrt((x(i)-x_0(i))**2 +(y(i)-y_0(i))**2 &
@@ -1771,21 +1767,6 @@
         uss(is) =  um/np1
         usb(is) =  ub/np1
 !
-      if(.false.) then
-        if(if_LJ0) then
-          if_LJ0= .false.
-!
-          e_sp0 = e_sp
-          e_c_r0= e_c_r
-          e_LJ0 = e_LJ
-        end if
-!
-!  Normalized energies for e_sp, e_c_r, e_LJ
-        e_sp = (e_sp  -e_sp0 )/(np1+np2)
-        e_c_r= (e_c_r -e_c_r0)/(np1+np2)
-        e_LJ = (e_LJ  -e_LJ0 )/(np1+np2)
-      end if
-!
         t4 = t8
         Bex4= B00*Bex
         Bez4= B00*Bez
@@ -1793,6 +1774,8 @@
 !--------------------
 !* Spin Temperature
 !--------------------
+!  Save tsx,tsy,tsz in read(12)
+!
         do 741 k= 1,3
         sn1(k)= 0
         sx1(k)= 0
@@ -1872,7 +1855,7 @@
       end if
       end if
 !
-!                                               ic= 0: Reset wx-wn
+!  All nodes                                     ic= 0: Reset wx-wn
       call magnetiz (spx,spy,spz,g,wx1,wy1,wz1,wn1,u1,uav,wt1,    &
                                                       rank,i1,i2,0)
 !
@@ -1913,19 +1896,16 @@
 !
         close(12)
       end if
-!     close (11)
       end if
 !
 !******************************************************************
 ! ---- Diagnosis Ended ------------- On the major node ---------- *
 !******************************************************************
 !
-!       if(istop.eq.1) go to 7000
       go to 1000
 ! ************* End of the Loop ***********************************
 !
  7000 continue
-!
       if(rank.eq.0) then
 !
         call date_and_time7 (cdate,ctime)
@@ -2061,7 +2041,7 @@
       snt = rsi*rsi*rsi
 !
 !*  Lennard-Jones force only for the Fe-O pair
-!     ref. J.Rustad, B.Hay, and J.Halley, J.Chem.Phys. 102, 427 (1995).
+!     Ref. J.Rustad, B.Hay, and J.Halley, J.Chem.Phys. 102, 427 (1995).
 !             ***
 !
       if(spec(i).eq.0) then         ! O-
@@ -2081,13 +2061,13 @@
       go to 600
 !
   400 continue
-!     if(.true.) go to 300  !<-- ??
+!     if(.true.) go to 300 
 !     +++++++++ 
 !
       if(spec(i).eq.1 .or. spec(j).eq.1) then
         bb = 0.85d0*b  ! +3
       else
-        bb = 0.9d0*b   ! +2
+        bb = 0.90d0*b  ! +2
       end if
 !
       e_LJ = e_LJ +fc2*( a*exp(-bb*r) +(c +d*snt)*snt )
@@ -2104,23 +2084,22 @@
         snt2= 2**(1.d0/6.d0)
         rLJ = r/(rintC(k,i)/snt2)   ! Minimum at rintC(k,i) for this pair
 !                *****
-        rsi = 1/dmax1(rLJ**2, 0.81d0)
+        rsi = 1/max(rLJ**2, 0.81d0)
         snt = rsi*rsi*rsi
 !
         e_LJ = e_LJ +fc2*(d/12.d0)*snt*(snt -1.d0)
         ccel =       fc2*d*snt*(snt -0.5d0)/r2
       end if
-!            <-- also go to 600 !
 !
+!*  Coulomb forces in the Ewald sum
   600 continue
-!*  Coulomb force in Ewald sum
 !
       ar   = alpha*r
       tt   = 1.d0 / ( 1.d0 + pp * ar )
       erfc = tt*(a1+tt*(a2+tt*(a3+tt*(a4+tt*a5))))
 !
-      e_c_r  = e_c_r + fc2*ch(i)*ch(j)* erfc*dexp(-ar**2)/r
-      forceV = fc2*ch(i)*ch(j)*(erfc/r +2*alpha/sqrtpi)*dexp(-ar**2)/r2
+      e_c_r  = e_c_r + fc2*ch(i)*ch(j)* erfc*exp(-ar**2)/r
+      forceV = fc2*ch(i)*ch(j)*(erfc/r +2*alpha/sqrtpi)*exp(-ar**2)/r2
 !        1         2         3         4         5         6         71
 !
       fxC(i)= fxC(i) +(ccel +forceV)*xx 
@@ -2151,7 +2130,7 @@
                  Bapx,Bapy,Bapz,Bstat,tau_b,tau_diss,Temp,TCurie, &
                  xleng,yleng,zleng,pi,pi2,th,ph,xx,yy,zz,         &
                  t8,dt,tmax,cptot,xleng0,yleng0,zleng0,           &
-                 a(3),b(3),c(3),qFe2,qFe3,qo
+                 a(3),b(3),c(3),qFe2,qFe3,qO
       real(C_DOUBLE) eps,ranff
       integer(C_INT) rank,size,spec(np0),site(np0),np1,np2,np10,np20,  &
                  mx,my,mz,i,l,j,lo,ia,ja,ka,ic,jc,kc,i1,i2,j1,j2,k1,k2,&
@@ -2203,7 +2182,7 @@
 !
       qFe2= 2.0d0
       qFe3= 3.0d0
-      qo = -2.0d0
+      qO = -2.0d0
 !
       i= 0
       j= 0
@@ -2238,8 +2217,8 @@
         xo(j)= xx
         yo(j)= yy
         zo(j)= zz
-        cho(j)= qo
-        spec(j)= 0     ! oxygen
+        cho(j)= qO
+        spec(j)= 0     ! Oxygen 
         go to 100
       end if
 !
@@ -2296,7 +2275,7 @@
         open (unit=11,file=praefixc//'.11'//suffix2, &
                     status='unknown',position='append',form='formatted')
 !
-        write(11,703) np10,np20,nFe2,nFe3+8
+        write(11,703) np10,np20,nFe2,nFe3
   703   format(/,' Fundamental domain of irons and oxygens ',/, &
                  '   #Fe,:#O, Fe(2+), Fe(3+)=',2i4,2i4)
 !
@@ -2440,7 +2419,7 @@
       x(l)= xo(i)
       y(l)= yo(i)
       z(l)= zo(i)
-      ch(l)= qo
+      ch(l)= qO
       spec(l)= 0
   500 continue
 !
@@ -2454,10 +2433,11 @@
       do 630 i= 1,np20
       l= l +1
       j= j +1
+!           lattice:  a        b        c
       x(l)= xo(i) +ia*a(1) +ja*b(1) +ka*c(1)
       y(l)= yo(i) +ia*a(2) +ja*b(2) +ka*c(2)
       z(l)= zo(i) +ia*a(3) +ja*b(3) +ka*c(3)
-      ch(l)= qo
+      ch(l)= qO
       spec(l)= 0
   630 continue
 !
@@ -2505,9 +2485,10 @@
 !**********************************
 !* Make xyz file for DS Viewer    *
 !**********************************
+!  Start a new xyz file for /spin_dynamics/
 !
         open (unit=23,file=praefixc//suffix2//'.xyz', &
-                                 status='unknown',form='formatted')
+                                 status='replace',form='formatted')
 !
         write(23,'(i6)') np1+np2
         write(23,'(a30)') 'All atoms in the entire system'
@@ -2529,8 +2510,8 @@
       end subroutine init
 !
 !
-!cccccccccccccc   p3m (fortran 77)  ccccccccccccccccccccccccccccccccccc
-!                                 26.10.99 
+!cccccccccccccc   p3m (Fortran 77)  ccccccccccccccccccccccccccccccccccc
+!                                 26.10.1999 
 !                                     Motohiko Tanaka, Christian Holm
 !  Caling sequences:
 !
@@ -2538,7 +2519,7 @@
 !     call  p3m_perform (coox,cooy,cooz,q,fx,fy,fz,e_Coulomb_p3m)
 !
 !/*---------------------------------------------------------------------
-! subunit:  p3m_v2.f  (fortran 90)
+! subunit:  p3m_v2.f  (Fortran 90)
 ! 
 !       version   20.10.1999 (ch) 
 !       corrected 26.10.1999 (mt)
@@ -2880,7 +2861,7 @@
 !
           expo= fak2*((nmx/xleng)**2 +(nmy/yleng)**2 +(nmz/zleng)**2)
           if (expo .lt. exponent_limit) then
-              fak3 =  s3* dexp(-expo)/nm2 
+              fak3 =  s3* exp(-expo)/nm2 
           else
               fak3 = 0.d0
           end if
