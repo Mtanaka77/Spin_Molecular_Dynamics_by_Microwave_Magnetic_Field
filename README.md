@@ -23,7 +23,7 @@ Dissipation spin molecular dynamics simulation is executed in the MD cycle.
 
   > Execution of a few 1,000,000 steps (1 GHz ranges) for $ Delta t= 0.001 $ ps
 
-Microwave magnetic heating by numerical simulation reaches 1,500 Celsius for metal oxide magnetite.
+Microwave magnetic heating by numerical simulation reaches 1,400 Celsius for metal oxide magnetite.
 The peak of the time derivative dU_sys/dt corresponds to the Curie temperatre of 858 K (585 C) 
 with the sinusoidal magnetic field Bz= 5,000 gauss, the constant magnetic field B_z0= 10^4 gauss, 
 and the initial temperture 200 K. 
