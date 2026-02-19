@@ -33,16 +33,16 @@ the proof of our theory of sintering, Ref. 2.
 
 ## Numerical Code, Parameters and Files
 
-1) @spin_SMD5a.f03: Dissipative spin molecular dynamics. An odd number of processors
+1) @spin_SMD7a.f03: Dissipative spin molecular dynamics. An odd number of processors
 in the z direction is required for your choice. Read the simulation code and parameters
 for details !!
 
-3) param_spinRL5.h: Parameters 
+3) param_spinRL7.h: Parameters 
 
  > number of processors (nodes), total cells of irons and oxygens (odd numbers such as 5x5x5 nodes),
 p3m resolution
   
-3) SAI105_config.START1: Configuration file
+3) SAI107_config.START1: Configuration file
 
  > physical run time, lattice sizes, number of cells, exchange integrals for Fe and O,
   period of microwave magnetic field, temperature, Curie temprature, etc.
